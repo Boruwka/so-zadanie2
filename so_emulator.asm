@@ -46,5 +46,75 @@ mov r15b, [rel cpu_state] ; wartość Z
 shl r15w, 8
 shr dword[rel cpu_state], 8
 mov r15b, [rel cpu_state] ; wartość C
-ret 
+ret
+
+
+global get_value_from_register_code
+get_value_from_register_code:
+    ; otrzymujemy tę value w dil (odpowiedniku rdi)
+    ; w rsi mamy data
+    ; a zwracamy w al
+    
+    push r12
+    push r13
+    ; przestrzegamy abi
+    
+    mov dil, r10b 
+    cmp al, 0
+    je get_value_from_register_code_exit
+
+    mov dil, r11b 
+    cmp al, 1
+    je get_value_from_register_code_exit
+
+    mov dil, r12b 
+    cmp al, 2
+    je get_value_from_register_code_exit
+
+    mov dil, r13b 
+    cmp al, 3
+    je get_value_from_register_code_exit
+
+    mov r8, rsi
+    add r8b, r12b ; data + x
+    mov dil, [r8] ; [x] czyli [data+x]
+    cmp al, 4
+    je get_value_from_register_code_exit
+
+    mov r8, rsi
+    add r8b, r13b ; data + y
+    jno .no_overflow_1
+    add r8, 0x100
+    .no_overflow_1: 
+    mov dil, [r8] ; [y] czyli [data+y]
+    cmp al, 5
+    je get_value_from_register_code_exit
+
+    mov r8, rsi
+    add r8b, r12b ; data + x
+    add r8b, r11b ; + d
+    jno .no_overflow_2
+    add r8, 0x100
+    .no_overflow_2: 
+    mov dil, [r8] ; [x] czyli [data+x]
+    cmp al, 6
+    je get_value_from_register_code_exit
+
+    mov r8, rsi
+    add r8b, r13b ; data + y
+    jno .no_overflow_3
+    add r8, 0x100
+    .no_overflow_3: 
+    add r8b, r11b ; + d
+    jno .no_overflow_4
+    add r8, 0x100
+    .no_overflow_4: 
+    mov dil, [r8] ; [y] czyli [data+y]
+    cmp al, 7
+    je get_value_from_register_code_exit
+
+    get_value_from_register_code_exit:
+        pop r13
+        pop r12
+        ret 
 
