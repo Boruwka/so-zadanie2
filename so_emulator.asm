@@ -222,9 +222,9 @@ execute_or:
     cmp dil, 4
     je execute_or_exit
 
-    or r8, rsi
+    mov r8, rsi
     add r8, r13 ; data + y
-    mov [r8], al ; [y] czyli [data+y]
+    or [r8], al ; [y] czyli [data+y]
     cmp dil, 5
     je execute_or_exit
 
@@ -245,6 +245,67 @@ execute_or:
     execute_or_exit:
         ret
 
+global execute_add:
+execute_add:
+    ; dostajemy jako argumenty kody rejestrów
+    ; w dil i sil
+    ; w rdx mamy data
+    push rdi
+    push rsi
+    push rdx
+    mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
+    mov rsi, rdx
+    call get_value_from_register_code
+    pop rdx
+    pop rsi
+    pop rdi
+    ; teraz musimy do rejestru o kodzie dil dać wartość w al
+
+    add r10b, al
+    cmp dil, 0
+    je execute_add_exit
+
+    add r11b, al
+    cmp dil, 1
+    je execute_add_exit
+
+    add r12b, al
+    cmp dil, 2
+    je execute_add_exit
+
+    add r13b, al
+    cmp dil, 3
+    je execute_add_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add [r8], al ; [x] czyli [data+x]
+    cmp dil, 4
+    je execute_add_exit
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    add [r8], al ; [y] czyli [data+y]
+    cmp dil, 5
+    je execute_add_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    add [r8], al ; [x+d] czyli [data+x+d]
+    cmp dil, 6
+    je execute_add_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    add [r8], al ; [y+d] czyli [data+y+d]
+    cmp dil, 7
+    je execute_add_exit
+
+    execute_add_exit:
+        ret
+
 global testowa:
 testowa: 
 ; przestrzega abi
@@ -259,7 +320,10 @@ call push_state_to_registers
 mov rdx, rdi ; data
 mov dil, 0
 mov sil, 4
-call execute_mov
+call execute_add
+mov dil, 0
+mov dil, 0
+call execute_add
 mov al, r10b
 ; call push_state_to_rax
 ;mov dil, 4 
