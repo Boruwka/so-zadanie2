@@ -49,36 +49,32 @@ mov r15b, [rel cpu_state] ; wartość C
 ret
 
 
-global get_value_from_register_code
+global get_value_from_register_code:
 get_value_from_register_code:
-    ; otrzymujemy tę value w dil (odpowiedniku rdi)
+    ; otrzymujemy register code w dil (odpowiedniku rdi)
     ; w rsi mamy data
     ; a zwracamy w al
     
-    push r12
-    push r13
-    ; przestrzegamy abi
-    
-    mov dil, r10b 
-    cmp al, 0
+    mov al, r10b 
+    cmp dil, 0
     je get_value_from_register_code_exit
 
-    mov dil, r11b 
-    cmp al, 1
+    mov al, r11b 
+    cmp dil, 1
     je get_value_from_register_code_exit
 
-    mov dil, r12b 
-    cmp al, 2
+    mov al, r12b 
+    cmp dil, 2
     je get_value_from_register_code_exit
 
-    mov dil, r13b 
-    cmp al, 3
+    mov al, r13b 
+    cmp dil, 3
     je get_value_from_register_code_exit
 
     mov r8, rsi
     add r8b, r12b ; data + x
-    mov dil, [r8] ; [x] czyli [data+x]
-    cmp al, 4
+    mov al, [r8] ; [x] czyli [data+x]
+    cmp dil, 4
     je get_value_from_register_code_exit
 
     mov r8, rsi
@@ -86,8 +82,8 @@ get_value_from_register_code:
     jno .no_overflow_1
     add r8, 0x100
     .no_overflow_1: 
-    mov dil, [r8] ; [y] czyli [data+y]
-    cmp al, 5
+    mov al, [r8] ; [y] czyli [data+y]
+    cmp dil, 5
     je get_value_from_register_code_exit
 
     mov r8, rsi
@@ -99,8 +95,8 @@ get_value_from_register_code:
     jno .no_overflow_3
     add r8, 0x100
     .no_overflow_3: 
-    mov dil, [r8] ; [x+d] czyli [data+x+d]
-    cmp al, 6
+    mov al, [r8] ; [x+d] czyli [data+x+d]
+    cmp dil, 6
     je get_value_from_register_code_exit
 
     mov r8, rsi
@@ -112,13 +108,11 @@ get_value_from_register_code:
     jno .no_overflow_5
     add r8, 0x100
     .no_overflow_5: 
-    mov dil, [r8] ; [y+d] czyli [data+y+d]
-    cmp al, 7
+    mov al, [r8] ; [y+d] czyli [data+y+d]
+    cmp dil, 7
     je get_value_from_register_code_exit
 
     get_value_from_register_code_exit:
-        pop r13
-        pop r12
         ret 
 
 global execute_mov:
@@ -127,14 +121,20 @@ execute_mov:
     ; w dil i sil
     ; w rdx mamy data
     push rdi
+    push rsi
+    push rdx
     mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
-    call get_value_from_register_code ; teraz w rax jest to co mamy wsadzić
+    mov rsi, rdx
+    call get_value_from_register_code
+    pop rdx
+    pop rsi
     pop rdi
-    ; teraz musimy do rejestru o kodzie dil dać wartość z rax, a właściwie to al
+    ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
     mov r10b, al
     cmp dil, 0
     je execute_mov_exit
+    ; jmp execute_mov_exit ; tylko do debugu ta linijka
 
     mov r11b, al
     cmp dil, 1
@@ -191,3 +191,25 @@ execute_mov:
 
     execute_mov_exit:
         ret
+
+global testowa:
+testowa: 
+; przestrzega abi
+; wywołuje inne funkcje
+; w rdi dostaje data
+; w rax zwraca co chcemy
+push r12
+push r13
+call push_state_to_registers
+mov rdx, rdi ; data
+mov dil, 0
+mov sil, 4
+call execute_mov
+mov al, r10b
+; call push_state_to_rax
+;mov dil, 4 
+;pop rsi
+;call get_value_from_register_code
+pop r13
+pop r12
+ret

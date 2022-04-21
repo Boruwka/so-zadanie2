@@ -20,6 +20,10 @@ cpu_state_t push_state_to_rax();
 
 void push_state_to_registers();
 
+__uint8_t get_value_from_register_code(__uint8_t arg);
+
+
+
 
 static void dump_cpu_state(size_t core, cpu_state_t cpu_state, uint8_t const *data) {
   printf("core %zu: A = %02" PRIx8 ", D = %02" PRIx8 ", X = %02" PRIx8 ", Y = %02"
@@ -30,14 +34,19 @@ static void dump_cpu_state(size_t core, cpu_state_t cpu_state, uint8_t const *da
          data[(cpu_state.X + cpu_state.D) & 0xFF], data[(cpu_state.Y + cpu_state.D) & 0xFF]);
 }
 
+__uint8_t testowa(__uint8_t* data);
 
 int main()
 {
-    uint8_t* data = malloc(256);
+    int data_size = 256;
+    uint8_t* data = malloc(data_size);
+    for (int i = 0; i < data_size; i++)
+    {
+        data[i] = 0;
+    }
     data[0] = 7;
-    cpu_state_t st;
-    push_state_to_registers(); // wyzerują się rejestry
-    execute_mov(0, 4);
-    st = push_state_to_rax();
-    dump_cpu_state(1, st, data);
+    printf("%d\n", testowa(data));
+    /* cpu_state_t st;
+    st = testowa(data);
+    dump_cpu_state(1, st, data); */
 }
