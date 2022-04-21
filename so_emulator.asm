@@ -32,6 +32,13 @@ global push_state_to_registers:
 push_state_to_registers:
 ; na początku wywołania so_emul()
 ; bierze zamrożone cpu_state i kopiuje je do rejestrów
+; zeruje wcześniejsze części rejestrów, żeby nie było problemu
+mov r10, 0
+mov r11, 0
+mov r12, 0
+mov r13, 0
+mov r14, 0
+mov r15, 0
 mov r10b, [rel cpu_state] ; wartość A
 shr dword[rel cpu_state], 8
 mov r11b, [rel cpu_state] ; wartość D
@@ -149,47 +156,93 @@ execute_mov:
     je execute_mov_exit
 
     mov r8, rdx
-    add r8b, r12b ; data + x
+    add r8, r12 ; data + x
     mov [r8], al ; [x] czyli [data+x]
     cmp dil, 4
     je execute_mov_exit
 
     mov r8, rsi
-    add r8b, r13b ; data + y
-    jno .no_overflow_1
-    add r8, 0x100
-    .no_overflow_1: 
+    add r8, r13 ; data + y
     mov [r8], al ; [y] czyli [data+y]
     cmp dil, 5
     je execute_mov_exit
 
     mov r8, rdx
-    add r8b, r12b ; data + x
-    jno .no_overflow_2
-    add r8, 0x100
-    .no_overflow_2: 
-    add r8b, r11b ; + d
-    jno .no_overflow_3
-    add r8, 0x100
-    .no_overflow_3: 
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
     mov [r8], al ; [x+d] czyli [data+x+d]
     cmp dil, 6
     je execute_mov_exit
 
     mov r8, rdx
-    add r8b, r13b ; data + y
-    jno .no_overflow_4
-    add r8, 0x100
-    .no_overflow_4: 
-    add r8b, r11b ; + d
-    jno .no_overflow_5
-    add r8, 0x100
-    .no_overflow_5: 
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
     mov [r8], al ; [y+d] czyli [data+y+d]
     cmp dil, 7
     je execute_mov_exit
 
     execute_mov_exit:
+        ret
+
+global execute_or:
+execute_or:
+    ; dostajemy jako argumenty kody rejestrów
+    ; w dil i sil
+    ; w rdx mamy data
+    push rdi
+    push rsi
+    push rdx
+    mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
+    mov rsi, rdx
+    call get_value_from_register_code
+    pop rdx
+    pop rsi
+    pop rdi
+    ; teraz musimy do rejestru o kodzie dil dać wartość w al
+
+    or r10b, al
+    cmp dil, 0
+    je execute_or_exit
+
+    or r11b, al
+    cmp dil, 1
+    je execute_or_exit
+
+    or r12b, al
+    cmp dil, 2
+    je execute_or_exit
+
+    or r13b, al
+    cmp dil, 3
+    je execute_or_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    or [r8], al ; [x] czyli [data+x]
+    cmp dil, 4
+    je execute_or_exit
+
+    or r8, rsi
+    add r8, r13 ; data + y
+    mov [r8], al ; [y] czyli [data+y]
+    cmp dil, 5
+    je execute_or_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    or [r8], al ; [x+d] czyli [data+x+d]
+    cmp dil, 6
+    je execute_or_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    or [r8], al ; [y+d] czyli [data+y+d]
+    cmp dil, 7
+    je execute_or_exit
+
+    execute_or_exit:
         ret
 
 global testowa:
@@ -200,6 +253,8 @@ testowa:
 ; w rax zwraca co chcemy
 push r12
 push r13
+push r14
+push r15
 call push_state_to_registers
 mov rdx, rdi ; data
 mov dil, 0
@@ -210,6 +265,8 @@ mov al, r10b
 ;mov dil, 4 
 ;pop rsi
 ;call get_value_from_register_code
+pop r15
+pop r14
 pop r13
 pop r12
 ret
