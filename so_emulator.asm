@@ -4,27 +4,51 @@ cpu_state: resb 8
 
 section .text
 
+turn_register:
+    ; dostaje rdi i w rax ma zwrócić odwrócony (w kolejności bitowej)
+    push rbx
+    mov rbx, 0
+    mov rax, 0
+    .loop:
+        mov rcx, rdi
+        shl rcx, 63
+        shr rcx, 63
+        ; teraz w rcx jest rdi mod 2
+        add rax, rcx
+        shl rax, 1
+        shr rdi, 1
+        inc rbx
+        cmp rbx, 64
+        jne .loop
+    pop rbx
+    ret
+
 global push_state_to_rax:
 push_state_to_rax:
     ; przy okazji zapisuje też stan w zmiennej cpu_state
     mov rax, 0
-    add al, r10b ; dodajemy wartość A na koniec
-    shl rax, 8 ; przesuwamy wartość A
-    add al, r11b ; wartość D
-    shl rax, 8
-    add al, r12b ; wartość X
-    shl rax, 8
-    add al, r13b ; wartość Y
-    shl rax, 8
-    add al, r14b ; wartość PC
-    shl rax, 16 ; bo jeszcze unused tu jest
-    ; jeszcze z i c - trzymamy je oba w r15w 
-    ; w r15b jest z a w r15w\r15b jest c
     add al, r15b ; wartość Z
     shl rax, 8 
+    ; w r15b jest z a w r15w\r15b jest c czy tam odwrotnie
     mov r15b, 0
     shr r15w, 8 ; teraz w r15b jest C
     add al, r15b ; wartość C
+    shl rax, 16 ; bo jeszcze unused
+    add al, r14b ; wartość PC
+    shl rax, 8
+    add al, r13b ; wartość Y
+    shl rax, 8
+    add al, r12b ; wartość X
+    shl rax, 8
+    add al, r11b ; wartość D
+    shl rax, 8 ;
+    add al, r10b ;
+    ; teraz obrócimy rax w drugą stronę, nwm po co, ale to działa
+    push rdi
+    mov rdi, rax
+    ; call turn_register 
+    pop rdi
+    ; obrócone
     mov [rel cpu_state], rax ; przenosimy żeby mieć na następne wywołania
     ret
 
@@ -316,19 +340,13 @@ push r12
 push r13
 push r14
 push r15
-call push_state_to_registers
-mov rdx, rdi ; data
-mov dil, 0
-mov sil, 4
-call execute_add
-mov dil, 0
-mov dil, 0
-call execute_add
-mov al, r10b
-; call push_state_to_rax
-;mov dil, 4 
-;pop rsi
-;call get_value_from_register_code
+mov r10b, 1
+mov r11b, 2
+mov r12b, 3
+mov r13b, 4
+mov r14b, 5
+mov r15w, 0x607
+call push_state_to_rax
 pop r15
 pop r14
 pop r13
