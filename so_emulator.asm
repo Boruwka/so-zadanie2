@@ -330,6 +330,67 @@ execute_add:
     execute_add_exit:
         ret
 
+global execute_sub:
+execute_sub:
+    ; dostajemy jako argumenty kody rejestrów
+    ; w dil i sil
+    ; w rdx mamy data
+    push rdi
+    push rsi
+    push rdx
+    mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
+    mov rsi, rdx
+    call get_value_from_register_code
+    pop rdx
+    pop rsi
+    pop rdi
+    ; teraz musimy do rejestru o kodzie dil dać wartość w al
+
+    sub r10b, al
+    cmp dil, 0
+    je execute_sub_exit
+
+    sub r11b, al
+    cmp dil, 1
+    je execute_sub_exit
+
+    sub r12b, al
+    cmp dil, 2
+    je execute_sub_exit
+
+    sub r13b, al
+    cmp dil, 3
+    je execute_sub_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    sub [r8], al ; [x] czyli [data+x]
+    cmp dil, 4
+    je execute_sub_exit
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    sub [r8], al ; [y] czyli [data+y]
+    cmp dil, 5
+    je execute_sub_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    sub [r8], al ; [x+d] czyli [data+x+d]
+    cmp dil, 6
+    je execute_sub_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    sub [r8], al ; [y+d] czyli [data+y+d]
+    cmp dil, 7
+    je execute_sub_exit
+
+    execute_sub_exit:
+        ret
+
 global testowa:
 testowa: 
 ; przestrzega abi
@@ -340,12 +401,15 @@ push r12
 push r13
 push r14
 push r15
-mov r10b, 1
-mov r11b, 2
-mov r12b, 3
-mov r13b, 4
-mov r14b, 5
-mov r15w, 0x607
+call push_state_to_registers
+mov rdx, rdi ; data
+mov dil, 0
+mov sil, 4
+call execute_sub
+mov dil, 0
+mov dil, 0
+call execute_sub
+; mov r10b, 2
 call push_state_to_rax
 pop r15
 pop r14
