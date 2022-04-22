@@ -27,11 +27,11 @@ global push_state_to_rax:
 push_state_to_rax:
     ; przy okazji zapisuje też stan w zmiennej cpu_state
     mov rax, 0
-    add al, r15b ; wartość Z
+    add al, r15b ; wartość C
     shl rax, 8 
-    ; w r15b jest z a w r15w\r15b jest c czy tam odwrotnie
+    ; w r15b jest C a w r15w\r15b jest Z
     mov r15b, 0
-    shr r15w, 8 ; teraz w r15b jest C
+    shr r15w, 8 ; teraz w r15b jest Z
     add al, r15b ; wartość C
     shl rax, 16 ; bo jeszcze unused
     add al, r14b ; wartość PC
@@ -389,6 +389,68 @@ execute_sub:
     je execute_sub_exit
 
     execute_sub_exit:
+        ret
+
+global execute_adc:
+execute_adc:
+    ; dostajemy jako argumenty kody rejestrów
+    ; w dil i sil
+    ; w rdx mamy data
+    push rdi
+    push rsi
+    push rdx
+    mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
+    mov rsi, rdx
+    call get_value_from_register_code
+    pop rdx
+    pop rsi
+    pop rdi
+    ; teraz musimy do rejestru o kodzie dil dać wartość w al
+
+    add r10b, al
+    cmp dil, 0
+    je execute_adc_exit
+
+    add r11b, al
+    cmp dil, 1
+    je execute_adc_exit
+
+    add r12b, al
+    cmp dil, 2
+    je execute_adc_exit
+
+    add r13b, al
+    cmp dil, 3
+    je execute_adc_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add [r8], al ; [x] czyli [data+x]
+    cmp dil, 4
+    je execute_adc_exit
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    add [r8], al ; [y] czyli [data+y]
+    cmp dil, 5
+    je execute_adc_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    add [r8], al ; [x+d] czyli [data+x+d]
+    cmp dil, 6
+    je execute_adc_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    add [r8], al ; [y+d] czyli [data+y+d]
+    cmp dil, 7
+    je execute_adc_exit
+
+    execute_adc_exit:
+        add al, r15b ; dodajemy wartość C
         ret
 
 global testowa:
