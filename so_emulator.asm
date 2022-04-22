@@ -225,30 +225,36 @@ execute_or:
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
     or r10b, al
+    pushf
     cmp dil, 0
     je execute_or_exit
 
     or r11b, al
+    pushf
     cmp dil, 1
     je execute_or_exit
 
     or r12b, al
+    pushf
     cmp dil, 2
     je execute_or_exit
 
     or r13b, al
+    pushf
     cmp dil, 3
     je execute_or_exit
 
     mov r8, rdx
     add r8, r12 ; data + x
     or [r8], al ; [x] czyli [data+x]
+    pushf
     cmp dil, 4
     je execute_or_exit
 
     mov r8, rsi
     add r8, r13 ; data + y
     or [r8], al ; [y] czyli [data+y]
+    pushf
     cmp dil, 5
     je execute_or_exit
 
@@ -256,6 +262,7 @@ execute_or:
     add r8, r12 ; data + x
     add r8, r11 ; + d
     or [r8], al ; [x+d] czyli [data+x+d]
+    pushf
     cmp dil, 6
     je execute_or_exit
 
@@ -263,10 +270,20 @@ execute_or:
     add r8, r13 ; data + y
     add r8, r11 ; + d
     or [r8], al ; [y+d] czyli [data+y+d]
+    pushf
     cmp dil, 7
     je execute_or_exit
 
     execute_or_exit:
+        mov al, r15b
+        mov r15b, 1
+        popf 
+        jnz .no_zero ; Z się nie ustawiło w or
+        mov r15b, 0
+        .no_zero:
+        ; teraz w r15b mamy wynik, a chcemy go w r15w\r15b
+        shl r15w, 8
+        mov r15b, al ; przywracamy wartość C
         ret
 
 global execute_add:
@@ -402,6 +419,7 @@ execute_adc:
     mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
     mov rsi, rdx
     call get_value_from_register_code
+    add al, r15b ; dodajemy wartość C
     pop rdx
     pop rsi
     pop rdi
@@ -450,7 +468,121 @@ execute_adc:
     je execute_adc_exit
 
     execute_adc_exit:
-        add al, r15b ; dodajemy wartość C
+        ret
+
+global execute_sbb:
+execute_sbb:
+    ; dostajemy jako argumenty kody rejestrów
+    ; w dil i sil
+    ; w rdx mamy data
+    push rdi
+    push rsi
+    push rdx
+    mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
+    mov rsi, rdx
+    call get_value_from_register_code
+    add al, r15b ; dodajemy wartość C
+    pop rdx
+    pop rsi
+    pop rdi
+    ; teraz musimy do rejestru o kodzie dil dać wartość w al
+
+    sub r10b, al
+    cmp dil, 0
+    je execute_sbb_exit
+
+    sub r11b, al
+    cmp dil, 1
+    je execute_sbb_exit
+
+    sub r12b, al
+    cmp dil, 2
+    je execute_sbb_exit
+
+    sub r13b, al
+    cmp dil, 3
+    je execute_sbb_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    sub [r8], al ; [x] czyli [data+x]
+    cmp dil, 4
+    je execute_sbb_exit
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    sub [r8], al ; [y] czyli [data+y]
+    cmp dil, 5
+    je execute_sbb_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    sub [r8], al ; [x+d] czyli [data+x+d]
+    cmp dil, 6
+    je execute_sbb_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    sub [r8], al ; [y+d] czyli [data+y+d]
+    cmp dil, 7
+    je execute_sbb_exit
+
+    execute_sbb_exit:
+        ret
+
+global execute_movi:
+execute_movi:
+    ; dostajemy jako argumenty w dil kod rejestru
+    ; a w sil imm8
+    ; w rdx mamy data
+    ; teraz musimy do rejestru o kodzie dil dać wartość w sil
+
+    mov r10b, sil
+    cmp dil, 0
+    je execute_movi_exit
+    ; jmp execute_movi_exit ; tylko do debugu ta linijka
+
+    mov r11b, sil
+    cmp dil, 1
+    je execute_movi_exit
+
+    mov r12b, sil
+    cmp dil, 2
+    je execute_movi_exit
+
+    mov r13b, sil
+    cmp dil, 3
+    je execute_movi_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    mov [r8], sil ; [x] czyli [data+x]
+    cmp dil, 4
+    je execute_movi_exit
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    mov [r8], sil ; [y] czyli [data+y]
+    cmp dil, 5
+    je execute_movi_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    mov [r8], sil ; [x+d] czyli [data+x+d]
+    cmp dil, 6
+    je execute_movi_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    mov [r8], sil ; [y+d] czyli [data+y+d]
+    cmp dil, 7
+    je execute_movi_exit
+
+    execute_movi_exit:
         ret
 
 global testowa:
