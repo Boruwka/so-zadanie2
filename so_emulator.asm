@@ -27,11 +27,12 @@ global push_state_to_rax:
 push_state_to_rax:
     ; przy okazji zapisuje też stan w zmiennej cpu_state
     mov rax, 0
-    add al, r15b ; wartość C
+    add al, r15b ; wartość Z
     shl rax, 8 
-    ; w r15b jest C a w r15w\r15b jest Z
+    ; w r15b jest Z a w r15w\r15b jest C
+    ; ustalmy to raz na zawsze
     mov r15b, 0
-    shr r15w, 8 ; teraz w r15b jest Z
+    shr r15w, 8 ; teraz w r15b jest C
     add al, r15b ; wartość C
     shl rax, 16 ; bo jeszcze unused
     add al, r14b ; wartość PC
@@ -275,15 +276,16 @@ execute_or:
     je execute_or_exit
 
     execute_or_exit:
-        mov al, r15b
-        mov r15b, 1
+        ; mov al, r15b ; to do ustawiania C będzie
+        mov r15b, 0
         popf 
         jnz .no_zero ; Z się nie ustawiło w or
-        mov r15b, 0
+        ; mov r11b, 7 ; tylko do debugu xd
+        mov r15b, 1
         .no_zero:
         ; teraz w r15b mamy wynik, a chcemy go w r15w\r15b
-        shl r15w, 8
-        mov r15b, al ; przywracamy wartość C
+        ; shl r15w, 8 ; to do ustawiania C będzie
+        ; mov r15b, al ; przywracamy wartość C, ; to do ustawiania C będzie
         ret
 
 global execute_add:
@@ -599,10 +601,10 @@ call push_state_to_registers
 mov rdx, rdi ; data
 mov dil, 0
 mov sil, 4
-call execute_sub
+call execute_or
 mov dil, 0
 mov dil, 0
-call execute_sub
+call execute_or
 ; mov r10b, 2
 call push_state_to_rax
 pop r15
