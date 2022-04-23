@@ -953,6 +953,34 @@ execute_cmpi:
         mov r15w, ax ; aktualizacja flag
         ret
 
+global execute_rcr:
+execute_rcr:
+; w dil mamy kod rejestru
+; w rdx mamy data
+push rdx
+push rdi ; na wszelki wypadek, bo kto tam wie co ta funkcja zrobi
+call get_value_from_register_code
+pop rdi
+pop rdx
+; w al mamy teraz wartość, którą mamy obrócić i przekopiować do rejestru o kodzie dil z powrotem
+push rbx
+push rcx
+mov bx, r15w 
+mov bl, 0
+; teraz w bh mamy wartość flagi C
+shl bh, 7 ; teraz w najmniej znaczącym bicie bh mamy wartość C
+mov cl, al ; teraz w cl mamy tę liczbę którą mamy obrócić
+shl cl, 7
+shr cl, 7 ; a teraz tylko jej najmniej znaczący bit, czyli to co będzie miało być w C
+shr al, 1 ; obracamy al
+add al, bh ; dodajemy do najbardziej znaczącego bitu tę flagę
+; teraz w al mamy obróconą liczbę, wystarczy dodać do C
+mov bl, r15b ; kopiujemy Z
+mov bh, cl
+mov r15w, bx ; dodajemy obie części flag
+pop rcx
+pop rbx
+
 global testowa:
 testowa: 
 ; przestrzega abi
