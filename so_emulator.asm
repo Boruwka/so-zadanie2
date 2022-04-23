@@ -663,6 +663,71 @@ execute_movi:
     execute_movi_exit:
         ret
 
+global execute_xori:
+execute_xori:
+    ; dostajemy jako argumenty w dil kod rejestru
+    ; a w sil imm8
+    ; w rdx mamy data
+
+    xor r10b, sil
+    pushf
+    cmp dil, 0
+    je execute_xori_exit
+    ; jmp execute_xori_exit ; tylko do debugu ta linijka
+
+    xor r11b, sil
+    pushf
+    cmp dil, 1
+    je execute_xori_exit
+
+    xor r12b, sil
+    pushf
+    cmp dil, 2
+    je execute_xori_exit
+
+    xor r13b, sil
+    pushf
+    cmp dil, 3
+    je execute_xori_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    xor [r8], sil ; [x] czyli [data+x]
+    pushf
+    cmp dil, 4
+    je execute_xori_exit
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    xor [r8], sil ; [y] czyli [data+y]
+    pushf
+    cmp dil, 5
+    je execute_xori_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    xor [r8], sil ; [x+d] czyli [data+x+d]
+    pushf
+    cmp dil, 6
+    je execute_xori_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    xor [r8], sil ; [y+d] czyli [data+y+d]
+    pushf
+    cmp dil, 7
+    je execute_xori_exit
+
+    execute_xori_exit:
+        mov r15b, 0
+        popf 
+        jnz .no_zero ; Z się nie ustawiło w xor
+        mov r15b, 1
+        .no_zero:
+        ret
+
 global testowa:
 testowa: 
 ; przestrzega abi
@@ -676,12 +741,8 @@ push r15
 call push_state_to_registers
 mov rdx, rdi ; data
 mov dil, 0
-mov sil, 4
-call execute_sbb
-mov dil, 0
-mov dil, 0
-; call execute_adc
-; mov r10b, 2
+mov sil, 0
+call execute_xori
 call push_state_to_rax
 pop r15
 pop r14
