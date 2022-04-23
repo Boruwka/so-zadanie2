@@ -452,30 +452,42 @@ execute_adc:
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
     add r10b, al
+    pushf
+    pushf
     cmp dil, 0
     je execute_adc_exit
 
     add r11b, al
+    pushf
+    pushf
     cmp dil, 1
     je execute_adc_exit
 
     add r12b, al
+    pushf
+    pushf
     cmp dil, 2
     je execute_adc_exit
 
     add r13b, al
+    pushf
+    pushf
     cmp dil, 3
     je execute_adc_exit
 
     mov r8, rdx
     add r8, r12 ; data + x
     add [r8], al ; [x] czyli [data+x]
+    pushf
+    pushf
     cmp dil, 4
     je execute_adc_exit
 
     mov r8, rsi
     add r8, r13 ; data + y
     add [r8], al ; [y] czyli [data+y]
+    pushf
+    pushf
     cmp dil, 5
     je execute_adc_exit
 
@@ -483,6 +495,8 @@ execute_adc:
     add r8, r12 ; data + x
     add r8, r11 ; + d
     add [r8], al ; [x+d] czyli [data+x+d]
+    pushf
+    pushf
     cmp dil, 6
     je execute_adc_exit
 
@@ -490,10 +504,22 @@ execute_adc:
     add r8, r13 ; data + y
     add r8, r11 ; + d
     add [r8], al ; [y+d] czyli [data+y+d]
+    pushf
+    pushf
     cmp dil, 7
     je execute_adc_exit
 
     execute_adc_exit:
+        mov ax, 0
+        popf 
+        jnc .no_c
+        add ax, 0x100
+        .no_c:
+        popf
+        jnz .no_z
+        add ax, 1
+        .no_z:
+        mov r15w, ax ; aktualizacja flag
         ret
 
 global execute_sbb:
@@ -514,30 +540,42 @@ execute_sbb:
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
     sub r10b, al
+    pushf
+    pushf
     cmp dil, 0
     je execute_sbb_exit
 
     sub r11b, al
+    pushf
+    pushf
     cmp dil, 1
     je execute_sbb_exit
 
     sub r12b, al
+    pushf
+    pushf
     cmp dil, 2
     je execute_sbb_exit
 
     sub r13b, al
+    pushf
+    pushf
     cmp dil, 3
     je execute_sbb_exit
 
     mov r8, rdx
     add r8, r12 ; data + x
     sub [r8], al ; [x] czyli [data+x]
+    pushf
+    pushf
     cmp dil, 4
     je execute_sbb_exit
 
     mov r8, rsi
     add r8, r13 ; data + y
     sub [r8], al ; [y] czyli [data+y]
+    pushf
+    pushf
     cmp dil, 5
     je execute_sbb_exit
 
@@ -545,6 +583,8 @@ execute_sbb:
     add r8, r12 ; data + x
     add r8, r11 ; + d
     sub [r8], al ; [x+d] czyli [data+x+d]
+    pushf
+    pushf
     cmp dil, 6
     je execute_sbb_exit
 
@@ -552,10 +592,22 @@ execute_sbb:
     add r8, r13 ; data + y
     add r8, r11 ; + d
     sub [r8], al ; [y+d] czyli [data+y+d]
+    pushf
+    pushf
     cmp dil, 7
     je execute_sbb_exit
 
     execute_sbb_exit:
+        mov ax, 0
+        popf 
+        jnc .no_c
+        add ax, 0x100
+        .no_c:
+        popf
+        jnz .no_z
+        add ax, 1
+        .no_z:
+        mov r15w, ax ; aktualizacja flag
         ret
 
 global execute_movi:
@@ -625,10 +677,10 @@ call push_state_to_registers
 mov rdx, rdi ; data
 mov dil, 0
 mov sil, 4
-call execute_add
+call execute_sbb
 mov dil, 0
 mov dil, 0
-call execute_add
+; call execute_adc
 ; mov r10b, 2
 call push_state_to_rax
 pop r15
