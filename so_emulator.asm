@@ -280,7 +280,6 @@ execute_or:
         mov r15b, 0
         popf 
         jnz .no_zero ; Z się nie ustawiło w or
-        ; mov r11b, 7 ; tylko do debugu xd
         mov r15b, 1
         .no_zero:
         ; teraz w r15b mamy wynik, a chcemy go w r15w\r15b
@@ -305,30 +304,36 @@ execute_add:
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
     add r10b, al
+    pushf
     cmp dil, 0
     je execute_add_exit
 
     add r11b, al
+    pushf
     cmp dil, 1
     je execute_add_exit
 
     add r12b, al
+    pushf
     cmp dil, 2
     je execute_add_exit
 
     add r13b, al
+    pushf
     cmp dil, 3
     je execute_add_exit
 
     mov r8, rdx
     add r8, r12 ; data + x
     add [r8], al ; [x] czyli [data+x]
+    pushf
     cmp dil, 4
     je execute_add_exit
 
     mov r8, rsi
     add r8, r13 ; data + y
     add [r8], al ; [y] czyli [data+y]
+    pushf
     cmp dil, 5
     je execute_add_exit
 
@@ -343,10 +348,16 @@ execute_add:
     add r8, r13 ; data + y
     add r8, r11 ; + d
     add [r8], al ; [y+d] czyli [data+y+d]
+    pushf
     cmp dil, 7
     je execute_add_exit
 
     execute_add_exit:
+        mov r15b, 0
+        popf 
+        jnz .no_zero ; Z się nie ustawiło w or
+        mov r15b, 1
+        .no_zero:
         ret
 
 global execute_sub:
@@ -366,30 +377,36 @@ execute_sub:
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
     sub r10b, al
+    pushf
     cmp dil, 0
     je execute_sub_exit
 
     sub r11b, al
+    pushf
     cmp dil, 1
     je execute_sub_exit
 
     sub r12b, al
+    pushf
     cmp dil, 2
     je execute_sub_exit
 
     sub r13b, al
+    pushf
     cmp dil, 3
     je execute_sub_exit
 
     mov r8, rdx
     add r8, r12 ; data + x
     sub [r8], al ; [x] czyli [data+x]
+    pushf
     cmp dil, 4
     je execute_sub_exit
 
     mov r8, rsi
     add r8, r13 ; data + y
     sub [r8], al ; [y] czyli [data+y]
+    pushf
     cmp dil, 5
     je execute_sub_exit
 
@@ -397,6 +414,7 @@ execute_sub:
     add r8, r12 ; data + x
     add r8, r11 ; + d
     sub [r8], al ; [x+d] czyli [data+x+d]
+    pushf
     cmp dil, 6
     je execute_sub_exit
 
@@ -404,10 +422,16 @@ execute_sub:
     add r8, r13 ; data + y
     add r8, r11 ; + d
     sub [r8], al ; [y+d] czyli [data+y+d]
+    pushf
     cmp dil, 7
     je execute_sub_exit
 
     execute_sub_exit:
+        mov r15b, 0
+        popf 
+        jnz .no_zero ; Z się nie ustawiło w or
+        mov r15b, 1
+        .no_zero:
         ret
 
 global execute_adc:
@@ -601,10 +625,10 @@ call push_state_to_registers
 mov rdx, rdi ; data
 mov dil, 0
 mov sil, 4
-call execute_or
+call execute_add
 mov dil, 0
 mov dil, 0
-call execute_or
+call execute_add
 ; mov r10b, 2
 call push_state_to_rax
 pop r15
