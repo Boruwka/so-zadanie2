@@ -1028,6 +1028,13 @@ global execute_rcr:
     execute_rcr_exit:
         ret
 
+global execute_clc:
+execute_clc:
+    mov cx, r15w
+    mov ch, 0
+    mov r15w, cx
+    ret
+
 global testowa:
 testowa: 
 ; przestrzega abi
@@ -1042,8 +1049,9 @@ call push_state_to_registers
 mov rdx, rdi ; data
 mov rsi, rdi ; data
 mov dil, 0
-mov r10b, 2
+mov r10b, 3
 call execute_rcr
+call execute_clc
 call push_state_to_rax
 pop r15
 pop r14
