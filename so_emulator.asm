@@ -229,11 +229,13 @@ execute_or:
     pushf
     cmp dil, 0
     je execute_or_exit
+    popf
 
     or r11b, al
     pushf
     cmp dil, 1
     je execute_or_exit
+    popf
 
     or r12b, al
     pushf
@@ -244,6 +246,7 @@ execute_or:
     pushf
     cmp dil, 3
     je execute_or_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -251,6 +254,7 @@ execute_or:
     pushf
     cmp dil, 4
     je execute_or_exit
+    popf
 
     mov r8, rsi
     add r8, r13 ; data + y
@@ -258,6 +262,7 @@ execute_or:
     pushf
     cmp dil, 5
     je execute_or_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -266,6 +271,7 @@ execute_or:
     pushf
     cmp dil, 6
     je execute_or_exit
+    popf
 
     mov r8, rdx
     add r8, r13 ; data + y
@@ -274,6 +280,7 @@ execute_or:
     pushf
     cmp dil, 7
     je execute_or_exit
+    popf
 
     execute_or_exit:
         ; mov al, r15b ; to do ustawiania C będzie
@@ -307,21 +314,25 @@ execute_add:
     pushf
     cmp dil, 0
     je execute_add_exit
+    popf
 
     add r11b, al
     pushf
     cmp dil, 1
     je execute_add_exit
+    popf
 
     add r12b, al
     pushf
     cmp dil, 2
     je execute_add_exit
+    popf
 
     add r13b, al
     pushf
     cmp dil, 3
     je execute_add_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -329,6 +340,7 @@ execute_add:
     pushf
     cmp dil, 4
     je execute_add_exit
+    popf
 
     mov r8, rsi
     add r8, r13 ; data + y
@@ -336,6 +348,7 @@ execute_add:
     pushf
     cmp dil, 5
     je execute_add_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -343,6 +356,7 @@ execute_add:
     add [r8], al ; [x+d] czyli [data+x+d]
     cmp dil, 6
     je execute_add_exit
+    popf
 
     mov r8, rdx
     add r8, r13 ; data + y
@@ -351,6 +365,7 @@ execute_add:
     pushf
     cmp dil, 7
     je execute_add_exit
+    popf
 
     execute_add_exit:
         mov r15b, 0
@@ -380,11 +395,13 @@ execute_sub:
     pushf
     cmp dil, 0
     je execute_sub_exit
+    popf
 
     sub r11b, al
     pushf
     cmp dil, 1
     je execute_sub_exit
+    popf
 
     sub r12b, al
     pushf
@@ -395,6 +412,7 @@ execute_sub:
     pushf
     cmp dil, 3
     je execute_sub_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -409,6 +427,7 @@ execute_sub:
     pushf
     cmp dil, 5
     je execute_sub_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -417,6 +436,7 @@ execute_sub:
     pushf
     cmp dil, 6
     je execute_sub_exit
+    popf
 
     mov r8, rdx
     add r8, r13 ; data + y
@@ -425,6 +445,7 @@ execute_sub:
     pushf
     cmp dil, 7
     je execute_sub_exit
+    popf
 
     execute_sub_exit:
         mov r15b, 0
@@ -456,24 +477,32 @@ execute_adc:
     pushf
     cmp dil, 0
     je execute_adc_exit
+    popf
+    popf
 
     add r11b, al
     pushf
     pushf
     cmp dil, 1
     je execute_adc_exit
+    popf
+    popf
 
     add r12b, al
     pushf
     pushf
     cmp dil, 2
     je execute_adc_exit
+    popf
+    popf
 
     add r13b, al
     pushf
     pushf
     cmp dil, 3
     je execute_adc_exit
+    popf
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -482,6 +511,8 @@ execute_adc:
     pushf
     cmp dil, 4
     je execute_adc_exit
+    popf
+    popf
 
     mov r8, rsi
     add r8, r13 ; data + y
@@ -490,6 +521,8 @@ execute_adc:
     pushf
     cmp dil, 5
     je execute_adc_exit
+    popf
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -508,6 +541,8 @@ execute_adc:
     pushf
     cmp dil, 7
     je execute_adc_exit
+    popf
+    popf
 
     execute_adc_exit:
         mov ax, 0
@@ -544,24 +579,32 @@ execute_sbb:
     pushf
     cmp dil, 0
     je execute_sbb_exit
+    popf
+    popf
 
     sub r11b, al
     pushf
     pushf
     cmp dil, 1
     je execute_sbb_exit
+    popf
+    popf
 
     sub r12b, al
     pushf
     pushf
     cmp dil, 2
     je execute_sbb_exit
+    popf
+    popf
 
     sub r13b, al
     pushf
     pushf
     cmp dil, 3
     je execute_sbb_exit
+    popf
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -570,6 +613,8 @@ execute_sbb:
     pushf
     cmp dil, 4
     je execute_sbb_exit
+    popf
+    popf
 
     mov r8, rsi
     add r8, r13 ; data + y
@@ -578,6 +623,8 @@ execute_sbb:
     pushf
     cmp dil, 5
     je execute_sbb_exit
+    popf
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -587,6 +634,8 @@ execute_sbb:
     pushf
     cmp dil, 6
     je execute_sbb_exit
+    popf
+    popf
 
     mov r8, rdx
     add r8, r13 ; data + y
@@ -596,6 +645,8 @@ execute_sbb:
     pushf
     cmp dil, 7
     je execute_sbb_exit
+    popf
+    popf
 
     execute_sbb_exit:
         mov ax, 0
@@ -673,22 +724,25 @@ execute_xori:
     pushf
     cmp dil, 0
     je execute_xori_exit
-    ; jmp execute_xori_exit ; tylko do debugu ta linijka
+    popf
 
     xor r11b, sil
     pushf
     cmp dil, 1
     je execute_xori_exit
+    popf
 
     xor r12b, sil
     pushf
     cmp dil, 2
     je execute_xori_exit
+    popf
 
     xor r13b, sil
     pushf
     cmp dil, 3
     je execute_xori_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -696,6 +750,7 @@ execute_xori:
     pushf
     cmp dil, 4
     je execute_xori_exit
+    popf
 
     mov r8, rsi
     add r8, r13 ; data + y
@@ -703,6 +758,7 @@ execute_xori:
     pushf
     cmp dil, 5
     je execute_xori_exit
+    popf
 
     mov r8, rdx
     add r8, r12 ; data + x
@@ -711,6 +767,7 @@ execute_xori:
     pushf
     cmp dil, 6
     je execute_xori_exit
+    popf
 
     mov r8, rdx
     add r8, r13 ; data + y
@@ -719,6 +776,7 @@ execute_xori:
     pushf
     cmp dil, 7
     je execute_xori_exit
+    popf
 
     execute_xori_exit:
         mov r15b, 0
@@ -726,6 +784,173 @@ execute_xori:
         jnz .no_zero ; Z się nie ustawiło w xor
         mov r15b, 1
         .no_zero:
+        ret
+
+
+global execute_addi:
+execute_addi:
+    ; dostajemy jako argumenty w dil kod rejestru
+    ; a w sil imm8
+    ; w rdx mamy data
+
+    add r10b, sil
+    pushf
+    cmp dil, 0
+    je execute_xori_exit
+    popf
+
+    add r11b, sil
+    pushf
+    cmp dil, 1
+    je execute_addi_exit
+    popf
+
+    add r12b, sil
+    pushf
+    cmp dil, 2
+    je execute_addi_exit
+    popf
+
+    add r13b, sil
+    pushf
+    cmp dil, 3
+    je execute_addi_exit
+    popf
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add [r8], sil ; [x] czyli [data+x]
+    pushf
+    cmp dil, 4
+    je execute_addi_exit
+    popf
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    add [r8], sil ; [y] czyli [data+y]
+    pushf
+    cmp dil, 5
+    je execute_addi_exit
+    popf
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    add [r8], sil ; [x+d] czyli [data+x+d]
+    pushf
+    cmp dil, 6
+    je execute_addi_exit
+    popf
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    add [r8], sil ; [y+d] czyli [data+y+d]
+    pushf
+    cmp dil, 7
+    je execute_addi_exit
+    popf
+
+    execute_addi_exit:
+        mov r15b, 0
+        popf 
+        jnz .no_zero ; Z się nie ustawiło w xor
+        mov r15b, 1
+        .no_zero:
+        ret
+
+global execute_cmpi:
+execute_cmpi:
+    ; dostajemy jako argumenty w dil kod rejestru
+    ; a w sil imm8
+    ; w rdx mamy data
+
+    cmp r10b, sil
+    pushf
+    pushf
+    cmp dil, 0
+    je execute_cmpi_exit
+    popf
+    popf
+
+    cmp r11b, sil
+    pushf
+    pushf
+    cmp dil, 1
+    je execute_cmpi_exit
+    popf
+    popf
+
+    cmp r12b, al
+    pushf
+    pushf
+    cmp dil, 2
+    je execute_cmpi_exit
+    popf
+    popf
+
+    cmp r13b, sil
+    pushf
+    pushf
+    cmp dil, 3
+    je execute_cmpi_exit
+    popf
+    popf
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    cmp [r8], sil ; [x] czyli [data+x]
+    pushf
+    pushf
+    cmp dil, 4
+    je execute_cmpi_exit
+    ; jmp execute_cmpi_exit ; tylko do debugu ta linijka
+    popf
+    popf
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    cmp [r8], sil ; [y] czyli [data+y]
+    pushf
+    pushf
+    cmp dil, 5
+    je execute_cmpi_exit
+    popf
+    popf
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    cmp [r8], sil ; [x+d] czyli [data+x+d]
+    pushf
+    pushf
+    cmp dil, 6
+    je execute_cmpi_exit
+    popf
+    popf
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    cmp [r8], sil ; [y+d] czyli [data+y+d]
+    pushf
+    pushf
+    cmp dil, 7
+    je execute_cmpi_exit
+    popf
+    popf
+
+    execute_cmpi_exit:
+        mov ax, 0
+        popf 
+        jnc .no_c
+        add ax, 0x100
+        .no_c:
+        popf
+        jnz .no_z
+        add ax, 1
+        .no_z:
+        mov r15w, ax ; aktualizacja flag
         ret
 
 global testowa:
@@ -740,9 +965,9 @@ push r14
 push r15
 call push_state_to_registers
 mov rdx, rdi ; data
-mov dil, 0
-mov sil, 0
-call execute_xori
+mov dil, 4
+mov sil, 1
+call execute_cmpi
 call push_state_to_rax
 pop r15
 pop r14
