@@ -671,7 +671,6 @@ execute_movi:
     mov r10b, sil
     cmp dil, 0
     je execute_movi_exit
-    ; jmp execute_movi_exit ; tylko do debugu ta linijka
 
     mov r11b, sil
     cmp dil, 1
@@ -954,32 +953,80 @@ execute_cmpi:
         ret
 
 global execute_rcr:
-execute_rcr:
-; w dil mamy kod rejestru
-; w rdx mamy data
-push rdx
-push rdi ; na wszelki wypadek, bo kto tam wie co ta funkcja zrobi
-call get_value_from_register_code
-pop rdi
-pop rdx
-; w al mamy teraz wartość, którą mamy obrócić i przekopiować do rejestru o kodzie dil z powrotem
-push rbx
-push rcx
-mov bx, r15w 
-mov bl, 0
-; teraz w bh mamy wartość flagi C
-shl bh, 7 ; teraz w najmniej znaczącym bicie bh mamy wartość C
-mov cl, al ; teraz w cl mamy tę liczbę którą mamy obrócić
-shl cl, 7
-shr cl, 7 ; a teraz tylko jej najmniej znaczący bit, czyli to co będzie miało być w C
-shr al, 1 ; obracamy al
-add al, bh ; dodajemy do najbardziej znaczącego bitu tę flagę
-; teraz w al mamy obróconą liczbę, wystarczy dodać do C
-mov bl, r15b ; kopiujemy Z
-mov bh, cl
-mov r15w, bx ; dodajemy obie części flag
-pop rcx
-pop rbx
+    execute_rcr:
+    ; w dil mamy kod rejestru
+    ; w rdx mamy data
+    push rdx
+    push rdi ; na wszelki wypadek, bo kto tam wie co ta funkcja zrobi
+    call get_value_from_register_code
+    pop rdi
+    pop rdx
+    ; w al mamy teraz wartość, którą mamy obrócić i przekopiować do rejestru o kodzie dil z powrotem
+    push rbx
+    push rcx
+    mov bx, r15w 
+    mov bl, 0
+    ; teraz w bh mamy wartość flagi C
+    shl bh, 7 ; teraz w najmniej znaczącym bicie bh mamy wartość C
+    mov cl, al ; teraz w cl mamy tę liczbę którą mamy obrócić
+    shl cl, 7
+    shr cl, 7 ; a teraz tylko jej najmniej znaczący bit, czyli to co będzie miało być w C
+    shr al, 1 ; obracamy al
+    add al, bh ; dodajemy do najbardziej znaczącego bitu tę flagę
+    ; teraz w al mamy obróconą liczbę, wystarczy dodać do C
+    mov bl, r15b ; kopiujemy Z
+    mov bh, cl
+    mov r15w, bx ; dodajemy obie części flag
+    pop rcx
+    pop rbx
+    ; teraz w C jest to co miało być
+    ; a w al obrócona liczba
+    ; musimy dodać tę liczbę w al do rejestru o kodzie dil
+
+    mov r10b, al
+    cmp dil, 0
+    je execute_rcr_exit
+
+    mov r11b, al
+    cmp dil, 1
+    je execute_rcr_exit
+
+    mov r12b, al
+    cmp dil, 2
+    je execute_rcr_exit
+
+    mov r13b, al
+    cmp dil, 3
+    je execute_rcr_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    mov [r8], al ; [x] czyli [data+x]
+    cmp dil, 4
+    je execute_rcr_exit
+
+    mov r8, rsi
+    add r8, r13 ; data + y
+    mov [r8], al ; [y] czyli [data+y]
+    cmp dil, 5
+    je execute_rcr_exit
+
+    mov r8, rdx
+    add r8, r12 ; data + x
+    add r8, r11 ; + d
+    mov [r8], al ; [x+d] czyli [data+x+d]
+    cmp dil, 6
+    je execute_rcr_exit
+
+    mov r8, rdx
+    add r8, r13 ; data + y
+    add r8, r11 ; + d
+    mov [r8], al ; [y+d] czyli [data+y+d]
+    cmp dil, 7
+    je execute_rcr_exit
+
+    execute_rcr_exit:
+        ret
 
 global testowa:
 testowa: 
@@ -993,9 +1040,10 @@ push r14
 push r15
 call push_state_to_registers
 mov rdx, rdi ; data
-mov dil, 4
-mov sil, 1
-call execute_cmpi
+mov rsi, rdi ; data
+mov dil, 0
+mov r10b, 2
+call execute_rcr
 call push_state_to_rax
 pop r15
 pop r14
