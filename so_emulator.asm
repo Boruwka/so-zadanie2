@@ -1066,6 +1066,53 @@ testowa:
     pop r12
     ret
 
+global execute_jmp:
+execute_jmp:
+    ; po prostu zwiększa pc o argument z dil
+    add r14b, dil
+    ret
+
+global execute_jz:
+execute_jz:
+    cmp r15b, 1
+    jne execute_jz_exit
+    call execute_jmp
+    execute_jz_exit:
+        ret
+
+global execute_jnz:
+execute_jnz:
+    cmp r15b, 0
+    jne execute_jnz_exit
+    call execute_jmp
+    execute_jnz_exit:
+        ret
+
+global execute_jc:
+execute_jc:
+    push rcx
+    mov r15w, cx
+    shr cx, 8
+    cmp cl, 1
+    jne execute_jc_exit
+    call execute_jmp
+    execute_jc_exit:
+        pop rcx
+        ret
+
+global execute_jnc:
+execute_jnc:
+    push rcx
+    mov r15w, cx
+    shr cx, 8
+    cmp cl, 0
+    jne execute_jnc_exit
+    call execute_jmp
+    execute_jnc_exit:
+        pop rcx
+        ret
+
+
 global execute_command:
 execute_command:
     ; argumenty:
@@ -1143,9 +1190,13 @@ execute_command:
     push rdi
     push rsi
     push rdx
+    push rcx
     ; rsi - data
-    mov dil, bh ; arg
+    mov cl, bh
+    mov dil, cl ; przenoszenie arg
+    ; mov dil, bh ; arg
     call execute_rcr
+    pop rcx
     pop rdx
     pop rsi
     pop rdi
@@ -1160,10 +1211,14 @@ execute_command:
     push rdi
     push rsi
     push rdx
+    push rcx
     mov rdx, rsi ; data
     mov sil, bl ; imm8
-    mov dil, bh ; arg1
+    mov cl, bh
+    mov dil, cl ; arg1
+    ; mov dil, bh ; arg1
     call execute_cmpi
+    pop rcx
     pop rdx
     pop rsi
     pop rdi
@@ -1178,10 +1233,14 @@ execute_command:
     push rdi
     push rsi
     push rdx
+    push rcx
     mov rdx, rsi ; data
     mov sil, bl ; imm8
-    mov dil, bh ; arg1
+    mov cl, bh
+    mov dil, cl ; arg1
+    ; mov dil, bh ; arg1
     call execute_addi
+    pop rcx
     pop rdx
     pop rsi
     pop rdi
@@ -1196,10 +1255,14 @@ execute_command:
     push rdi
     push rsi
     push rdx
+    push rcx
     mov rdx, rsi ; data
     mov sil, bl ; imm8
-    mov dil, bh ; arg1
+    mov cl, bh 
+    mov dil, cl ; arg1
+    ; mov dil, bh ; arg1
     call execute_xori
+    pop rcx
     pop rdx
     pop rsi
     pop rdi
@@ -1214,10 +1277,14 @@ execute_command:
     push rdi
     push rsi
     push rdx
+    push rcx
     mov rdx, rsi ; data
     mov sil, bl ; imm8
-    mov dil, bh ; arg1
+    mov cl, bh 
+    mov dil, cl ; arg1
+    ; mov dil, bh ; arg1
     call execute_movi
+    pop rcx
     pop rdx
     pop rsi
     pop rdi
@@ -1237,7 +1304,10 @@ execute_command:
     ; i wstawić je w odpowiednie miejsca, bo dla wszystkich są takie same
     shl bx, 8 ; teraz w bh jest arg2 a w bl arg1
     mov dil, bl
-    mov sil, bh
+    push rcx
+    mov cl, bh
+    mov sil, cl
+    pop rcx
 
     cmp r8b, 0 
     jne .continue13
