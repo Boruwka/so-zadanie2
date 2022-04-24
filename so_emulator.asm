@@ -1134,6 +1134,131 @@ execute_command:
     .continue7:
     ; clc, stc, brk i skoki obsłużone, teraz reszta
 
+
+    cmp bx, 0x7001
+    jl .continue10
+    ; to jest rcr
+    ; teraz musimy wyłuskać argumenty
+    sub bx, 0x7001
+    push rdi
+    push rsi
+    push rdx
+    ; rsi - data
+    mov dil, bh ; arg
+    call execute_rcr
+    pop rdx
+    pop rsi
+    pop rdi
+    jmp execute_command_exit
+
+    .continue8:
+    cmp bx, 0x6800
+    jl .continue9
+    ; to jest cmpi
+    ; teraz musimy wyłuskać argumenty
+    sub bx, 0x6800
+    push rdi
+    push rsi
+    push rdx
+    mov rdx, rsi ; data
+    mov sil, bl ; imm8
+    mov dil, bh ; arg1
+    call execute_cmpi
+    pop rdx
+    pop rsi
+    pop rdi
+    jmp execute_command_exit
+
+    .continue9:
+    cmp bx, 0x6000
+    jl .continue10
+    ; to jest addi
+    ; teraz musimy wyłuskać argumenty
+    sub bx, 0x6000
+    push rdi
+    push rsi
+    push rdx
+    mov rdx, rsi ; data
+    mov sil, bl ; imm8
+    mov dil, bh ; arg1
+    call execute_addi
+    pop rdx
+    pop rsi
+    pop rdi
+    jmp execute_command_exit
+
+    .continue10:
+    cmp bx, 0x5800
+    jl .continue11
+    ; to jest xori
+    ; teraz musimy wyłuskać argumenty
+    sub bx, 0x5800
+    push rdi
+    push rsi
+    push rdx
+    mov rdx, rsi ; data
+    mov sil, bl ; imm8
+    mov dil, bh ; arg1
+    call execute_xori
+    pop rdx
+    pop rsi
+    pop rdi
+    jmp execute_command_exit
+
+    .continue11:
+    cmp bx, 0x4000
+    jl .continue12
+    ; to jest movi
+    ; teraz musimy wyłuskać argumenty
+    sub bx, 0x5800
+    push rdi
+    push rsi
+    push rdx
+    mov rdx, rsi ; data
+    mov sil, bl ; imm8
+    mov dil, bh ; arg1
+    call execute_movi
+    pop rdx
+    pop rsi
+    pop rdi
+    jmp execute_command_exit
+
+    .continue12:
+    mov r8b, bl 
+    shl r8b, 8
+    shr r8b, 8 ; teraz w r8b mamy końcówkę mówiącą jaka to instrukcja
+    push rdx
+    push rsi
+    push rdi
+    mov rdx, rsi ; data
+    sub bl, r8b ; mamy bez końcówki
+    ; spośród mov, or, add, sub, adc, sbb
+    ; tu musimy wyłuskać argumenty dla nich
+    ; i wstawić je w odpowiednie miejsca, bo dla wszystkich są takie same
+    shl bx, 8 ; teraz w bh jest arg2 a w bl arg1
+    mov dil, bl
+    mov sil, bh
+
+    cmp r8b, 0 
+    jne .continue13
+    ; to mov
+    call execute_mov
+    pop rdi
+    pop rsi
+    pop rdx
+    jmp execute_command_exit
+
+    .continue13:    
+    cmp r8b, 2 
+    jne .continue14
+    ; to or
+    call execute_or
+    pop rdi
+    pop rsi
+    pop rdx
+    jmp execute_command_exit
+       
+
     execute_command_exit:
         pop rbx
         ret
