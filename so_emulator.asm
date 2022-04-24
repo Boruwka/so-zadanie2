@@ -45,10 +45,10 @@ push_state_to_rax:
     shl rax, 8 ;
     add al, r10b ;
     ; teraz obrócimy rax w drugą stronę, nwm po co, ale to działa
-    push rdi
-    mov rdi, rax
+    ; push rdi
+    ; mov rdi, rax
     ; call turn_register 
-    pop rdi
+    ; pop rdi
     ; obrócone
     mov [rel cpu_state], rax ; przenosimy żeby mieć na następne wywołania
     ret
@@ -1035,26 +1035,171 @@ execute_clc:
     mov r15w, cx
     ret
 
+global execute_stc:
+execute_stc:
+    mov cx, r15w
+    mov ch, 1
+    mov r15w, cx
+    ret
+
 global testowa:
 testowa: 
-; przestrzega abi
-; wywołuje inne funkcje
-; w rdi dostaje data
-; w rax zwraca co chcemy
-push r12
-push r13
-push r14
-push r15
-call push_state_to_registers
-mov rdx, rdi ; data
-mov rsi, rdi ; data
-mov dil, 0
-mov r10b, 3
-call execute_rcr
-call execute_clc
-call push_state_to_rax
-pop r15
-pop r14
-pop r13
-pop r12
-ret
+    ; przestrzega abi
+    ; wywołuje inne funkcje
+    ; w rdi dostaje data
+    ; w rax zwraca co chcemy
+    push r12
+    push r13
+    push r14
+    push r15
+    call push_state_to_registers
+    mov rdx, rdi ; data
+    mov rsi, rdi ; data
+    mov dil, 0
+    mov r10b, 3
+    ; call execute_rcr
+    call execute_stc
+    call push_state_to_rax
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    ret
+
+global execute_command:
+execute_command:
+    ; argumenty:
+    ; rdi - code (wskaźnik)
+    ; rsi - data (wskaźnik)
+    ; rdx - steps 
+    ; rcx - core
+    ; bx - instrukcja, którą mamy wykonać
+    push rbx
+
+    ; najpierw sprawdzimy skoki
+    ; a potem dla pozostałych wyłuskamy argumenty i wywołamy odpowiednią funkcję
+
+    cmp bx, 0xc0 ; jmp
+    jne .continue1
+    ; jeśli tu jesteśmy to mamy jmp
+    call execute_jmp ; dostaje w bl swój argument
+    jmp execute_command_exit
+
+    .continue1:
+    ; teraz będziemy sprawdzać pozostałe skoki
+
+    cmp bx, 0xc2
+    jne .continue2
+    ; jeśli tu jesteśmy to mamy jnc
+    call execute_jnc ; dostaje w bl swój argument
+    jmp execute_command_exit
+
+    .continue2:
+    cmp bx, 0xc3
+    jne .continue3
+    ; jeśli tu jesteśmy to mamy jc
+    call execute_jc ; dostaje w bl swój argument
+    jmp execute_command_exit
+
+    .continue3:
+    cmp bx, 0xc4
+    jne .continue4
+    ; jeśli tu jesteśmy to mamy jnz
+    call execute_jnz ; dostaje w bl swój argument
+    jmp execute_command_exit
+
+    .continue4:
+    cmp bx, 0xc5
+    jne .continue5
+    ; jeśli tu jesteśmy to mamy jz
+    call execute_jz ; dostaje w bl swój argument
+    jmp execute_command_exit
+
+    .continue5:
+    ; jeśli tu jesteśmy to to nie jest skok
+    ; musimy teraz wyłuskać która to z pozostałych instrukcji i dać jej argumenty
+    ; i ją wywołać
+
+    cmp bx, 0x8000 
+    jne .continue6
+    call execute_clc
+    jmp execute_command_exit
+
+    .continue6:
+    cmp bx, 0x8100 
+    jne .continue7
+    call execute_stc
+    jmp execute_command_exit
+
+    .continue7:
+    ; clc, stc, brk i skoki obsłużone, teraz reszta
+
+    execute_command_exit:
+        pop rbx
+        ret
+
+global so_emul:
+so_emul:
+    ; argumenty:
+    ; rdi - code (wskaźnik)
+    ; rsi - data (wskaźnik)
+    ; rdx - steps 
+    ; rcx - core
+    ; rejestry SO trzymamy w:
+    ; r10b - A
+    ; r11b - D
+    ; r12b - X
+    ; r13b - Y
+    ; r14b - PC
+    ; r15w\r15b - C
+    ; r15b - Z
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    ; push_state_to_registers nie potrzebuje argumentów
+    push rdi
+    push rsi
+    push rdx
+    push rcx ; na wszelki wypadek 
+    call push_state_to_registers
+    pop rcx
+    pop rdx
+    pop rsi
+    pop rdi
+
+    mov rbx, 0 ; rbx - counter głównej pętli programu
+    
+    main_loop:
+        inc rbx
+        cmp rbx, rdx ; porównuję ze steps
+        ; execute command przyjmuje takie parametry jak so_emul
+        push rdi ; ale nie wiem czy ich nie zmienia, więc na wszelki wypadek
+        push rsi
+        push rdx
+        push rcx
+        push rbx
+        mov r8, rdi
+        add r8, r14 ; dodajemy PC
+        mov bx, [r8] ; instrukcja, którą mamy wykonać
+        cmp bx, 0xffff ; czy to brk?
+        je main_exit ; jeśli to brk to przerywamy
+        call execute_command ; jeśli nie brk to exectujemy
+        pop rbx
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        inc r14b ; pc++
+        jne main_loop
+
+    main_exit:
+        ; push_state_to_rax nie potrzebuje argumentów
+        call push_state_to_rax
+        pop rbx
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        ret
