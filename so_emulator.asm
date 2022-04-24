@@ -1257,6 +1257,48 @@ execute_command:
     pop rsi
     pop rdx
     jmp execute_command_exit
+
+    .continue14:    
+    cmp r8b, 4 
+    jne .continue15
+    ; to add
+    call execute_add
+    pop rdi
+    pop rsi
+    pop rdx
+    jmp execute_command_exit
+
+    .continue15:    
+    cmp r8b, 5 
+    jne .continue16
+    ; to sub
+    call execute_sub
+    pop rdi
+    pop rsi
+    pop rdx
+    jmp execute_command_exit
+
+    .continue16:    
+    cmp r8b, 6 
+    jne .continue17
+    ; to adc
+    call execute_adc
+    pop rdi
+    pop rsi
+    pop rdx
+    jmp execute_command_exit
+
+    .continue17:    
+    cmp r8b, 6 
+    jne .continue18
+    ; to sbb
+    call execute_sbb
+    pop rdi
+    pop rsi
+    pop rdx
+    jmp execute_command_exit
+
+    .continue18:
        
 
     execute_command_exit:
