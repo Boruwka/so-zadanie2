@@ -311,9 +311,6 @@ execute_or:
         jnz .no_zero ; Z się nie ustawiło w or
         mov r15b, 1
         .no_zero:
-        ; teraz w r15b mamy wynik, a chcemy go w r15w\r15b
-        ; shl r15w, 8 ; to do ustawiania C będzie
-        ; mov r15b, al ; przywracamy wartość C, ; to do ustawiania C będzie
         ret
 
 global execute_add:
@@ -332,67 +329,75 @@ execute_add:
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
+    cmp dil, 0
+    jne .continue1
     add r10b, al
     pushf
-    cmp dil, 0
-    je execute_add_exit
-    popf
+    jmp execute_add_exit
 
+    .continue1:
+    cmp dil, 1 
+    jne .continue2
     add r11b, al
     pushf
-    cmp dil, 1
-    je execute_add_exit
-    popf
+    jmp execute_add_exit
 
+    .continue2:
+    cmp dil, 2
+    jne .continue3
     add r12b, al
     pushf
-    cmp dil, 2
-    je execute_add_exit
-    popf
+    jmp execute_add_exit
 
+    .continue3: 
+    cmp dil, 3
+    jne .continue4   
     add r13b, al
     pushf
-    cmp dil, 3
-    je execute_add_exit
-    popf
+    jmp execute_add_exit
 
+    .continue4:    
+    cmp dil, 4
+    jne .continue5
     mov r8, rdx
     add r8, r12 ; data + x
     add [r8], al ; [x] czyli [data+x]
     pushf
-    cmp dil, 4
-    je execute_add_exit
-    popf
+    jmp execute_add_exit
 
+    .continue5:  
+    cmp dil, 5
+    jne .continue6  
     mov r8, rsi
     add r8, r13 ; data + y
     add [r8], al ; [y] czyli [data+y]
     pushf
-    cmp dil, 5
-    je execute_add_exit
-    popf
+    jmp execute_add_exit
 
+    .continue6:   
+    cmp dil, 6 
+    jne .continue7
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     add [r8], al ; [x+d] czyli [data+x+d]
-    cmp dil, 6
-    je execute_add_exit
-    popf
+    pushf
+    jmp execute_add_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_add_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     add [r8], al ; [y+d] czyli [data+y+d]
     pushf
-    cmp dil, 7
-    je execute_add_exit
-    popf
+    jmp execute_add_exit
 
     execute_add_exit:
         mov r15b, 0
         popf 
-        jnz .no_zero ; Z się nie ustawiło w or
+        jnz .no_zero ; Z się nie ustawiło w add
         mov r15b, 1
         .no_zero:
         ret
@@ -413,66 +418,75 @@ execute_sub:
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
+    cmp dil, 0
+    jne .continue1
     sub r10b, al
     pushf
-    cmp dil, 0
-    je execute_sub_exit
-    popf
+    jmp execute_sub_exit
 
+    .continue1:
+    cmp dil, 1 
+    jne .continue2
     sub r11b, al
     pushf
-    cmp dil, 1
-    je execute_sub_exit
-    popf
+    jmp execute_sub_exit
 
+    .continue2:
+    cmp dil, 2
+    jne .continue3
     sub r12b, al
     pushf
-    cmp dil, 2
-    je execute_sub_exit
+    jmp execute_sub_exit
 
+    .continue3: 
+    cmp dil, 3
+    jne .continue4   
     sub r13b, al
     pushf
-    cmp dil, 3
-    je execute_sub_exit
-    popf
+    jmp execute_sub_exit
 
+    .continue4:    
+    cmp dil, 4
+    jne .continue5
     mov r8, rdx
     add r8, r12 ; data + x
     sub [r8], al ; [x] czyli [data+x]
     pushf
-    cmp dil, 4
-    je execute_sub_exit
+    jmp execute_sub_exit
 
+    .continue5:  
+    cmp dil, 5
+    jne .continue6  
     mov r8, rsi
     add r8, r13 ; data + y
     sub [r8], al ; [y] czyli [data+y]
     pushf
-    cmp dil, 5
-    je execute_sub_exit
-    popf
+    jmp execute_sub_exit
 
+    .continue6:   
+    cmp dil, 6 
+    jne .continue7
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     sub [r8], al ; [x+d] czyli [data+x+d]
     pushf
-    cmp dil, 6
-    je execute_sub_exit
-    popf
+    jmp execute_sub_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_sub_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     sub [r8], al ; [y+d] czyli [data+y+d]
     pushf
-    cmp dil, 7
-    je execute_sub_exit
-    popf
+    jmp execute_sub_exit
 
     execute_sub_exit:
         mov r15b, 0
         popf 
-        jnz .no_zero ; Z się nie ustawiło w or
+        jnz .no_zero ; Z się nie ustawiło w add
         mov r15b, 1
         .no_zero:
         ret
@@ -488,83 +502,83 @@ execute_adc:
     mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
     mov rsi, rdx
     call get_value_from_register_code
-    add al, r15b ; dodajemy wartość C
     pop rdx
     pop rsi
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
+    cmp dil, 0
+    jne .continue1
     add r10b, al
     pushf
     pushf
-    cmp dil, 0
-    je execute_adc_exit
-    popf
-    popf
+    jmp execute_adc_exit
 
+    .continue1:
+    cmp dil, 1 
+    jne .continue2
     add r11b, al
     pushf
     pushf
-    cmp dil, 1
-    je execute_adc_exit
-    popf
-    popf
+    jmp execute_adc_exit
 
+    .continue2:
+    cmp dil, 2
+    jne .continue3
     add r12b, al
     pushf
     pushf
-    cmp dil, 2
-    je execute_adc_exit
-    popf
-    popf
+    jmp execute_adc_exit
 
+    .continue3: 
+    cmp dil, 3
+    jne .continue4   
     add r13b, al
     pushf
     pushf
-    cmp dil, 3
-    je execute_adc_exit
-    popf
-    popf
+    jmp execute_adc_exit
 
+    .continue4:    
+    cmp dil, 4
+    jne .continue5
     mov r8, rdx
     add r8, r12 ; data + x
     add [r8], al ; [x] czyli [data+x]
     pushf
     pushf
-    cmp dil, 4
-    je execute_adc_exit
-    popf
-    popf
+    jmp execute_adc_exit
 
+    .continue5:  
+    cmp dil, 5
+    jne .continue6  
     mov r8, rsi
     add r8, r13 ; data + y
     add [r8], al ; [y] czyli [data+y]
     pushf
     pushf
-    cmp dil, 5
-    je execute_adc_exit
-    popf
-    popf
+    jmp execute_adc_exit
 
+    .continue6:   
+    cmp dil, 6 
+    jne .continue7
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     add [r8], al ; [x+d] czyli [data+x+d]
     pushf
     pushf
-    cmp dil, 6
-    je execute_adc_exit
+    jmp execute_adc_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_adc_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     add [r8], al ; [y+d] czyli [data+y+d]
     pushf
     pushf
-    cmp dil, 7
-    je execute_adc_exit
-    popf
-    popf
+    jmp execute_adc_exit
 
     execute_adc_exit:
         mov ax, 0
@@ -590,85 +604,83 @@ execute_sbb:
     mov dil, sil ; przekazujemy argument dla funkcji get_value_from_register_code
     mov rsi, rdx
     call get_value_from_register_code
-    add al, r15b ; dodajemy wartość C
     pop rdx
     pop rsi
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
+    cmp dil, 0
+    jne .continue1
     sub r10b, al
     pushf
     pushf
-    cmp dil, 0
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
+    .continue1:
+    cmp dil, 1 
+    jne .continue2
     sub r11b, al
     pushf
     pushf
-    cmp dil, 1
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
+    .continue2:
+    cmp dil, 2
+    jne .continue3
     sub r12b, al
     pushf
     pushf
-    cmp dil, 2
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
+    .continue3: 
+    cmp dil, 3
+    jne .continue4   
     sub r13b, al
     pushf
     pushf
-    cmp dil, 3
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
+    .continue4:    
+    cmp dil, 4
+    jne .continue5
     mov r8, rdx
     add r8, r12 ; data + x
     sub [r8], al ; [x] czyli [data+x]
     pushf
     pushf
-    cmp dil, 4
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
+    .continue5:  
+    cmp dil, 5
+    jne .continue6  
     mov r8, rsi
     add r8, r13 ; data + y
     sub [r8], al ; [y] czyli [data+y]
     pushf
     pushf
-    cmp dil, 5
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
+    .continue6:   
+    cmp dil, 6 
+    jne .continue7
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     sub [r8], al ; [x+d] czyli [data+x+d]
     pushf
     pushf
-    cmp dil, 6
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_sbb_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     sub [r8], al ; [y+d] czyli [data+y+d]
     pushf
     pushf
-    cmp dil, 7
-    je execute_sbb_exit
-    popf
-    popf
+    jmp execute_sbb_exit
 
     execute_sbb_exit:
         mov ax, 0
@@ -688,51 +700,66 @@ execute_movi:
     ; dostajemy jako argumenty w dil kod rejestru
     ; a w sil imm8
     ; w rdx mamy data
-    ; teraz musimy do rejestru o kodzie dil dać wartość w sil
 
-    ; mov r15b, dil ; tylko do debugu ta linijka!!
+    ; mov r15b, 17 ; tylko do debugu ta linijka!!
+    ; add r15b, dil ; ta też
 
-    mov r10b, sil
     cmp dil, 0
-    je execute_movi_exit
+    jne .continue1    
+    mov r10b, sil
+    jmp execute_movi_exit
 
-    mov r11b, sil
+    .continue1:  
     cmp dil, 1
-    je execute_movi_exit
+    jne .continue2  
+    mov r11b, sil
+    ; mov r15b, 22 ; tylko do debugu ta linijka!!
+    jmp execute_movi_exit
 
-    mov r12b, sil
+    .continue2:  
     cmp dil, 2
-    je execute_movi_exit
+    jne .continue3  
+    mov r12b, sil
+    jmp execute_movi_exit
 
-    mov r13b, sil
+    .continue3:  
     cmp dil, 3
-    je execute_movi_exit
+    jne .continue4  
+    mov r13b, sil
+    jmp execute_movi_exit
 
+    .continue4:
+    cmp dil, 4
+    jne .continue5    
     mov r8, rdx
     add r8, r12 ; data + x
     mov [r8], sil ; [x] czyli [data+x]
-    cmp dil, 4
-    je execute_movi_exit
+    jmp execute_movi_exit
 
+    .continue5:
+    cmp dil, 5
+    jne .continue6    
     mov r8, rsi
     add r8, r13 ; data + y
     mov [r8], sil ; [y] czyli [data+y]
-    cmp dil, 5
-    je execute_movi_exit
+    jmp execute_movi_exit
 
+    .continue6: 
+    cmp dil, 6
+    jne .continue7   
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     mov [r8], sil ; [x+d] czyli [data+x+d]
-    cmp dil, 6
-    je execute_movi_exit
+    jmp execute_movi_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_movi_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     mov [r8], sil ; [y+d] czyli [data+y+d]
-    cmp dil, 7
-    je execute_movi_exit
 
     execute_movi_exit:
         ret
@@ -743,63 +770,69 @@ execute_xori:
     ; a w sil imm8
     ; w rdx mamy data
 
+    cmp dil, 0
+    jne .continue1    
     xor r10b, sil
     pushf
-    cmp dil, 0
-    je execute_xori_exit
-    popf
+    jmp execute_xori_exit
 
+    .continue1:  
+    cmp dil, 1
+    jne .continue2  
     xor r11b, sil
     pushf
-    cmp dil, 1
-    je execute_xori_exit
-    popf
+    jmp execute_xori_exit
 
+    .continue2:  
+    cmp dil, 2
+    jne .continue3  
     xor r12b, sil
     pushf
-    cmp dil, 2
-    je execute_xori_exit
-    popf
+    jmp execute_xori_exit
 
+    .continue3:  
+    cmp dil, 3
+    jne .continue4  
     xor r13b, sil
     pushf
-    cmp dil, 3
-    je execute_xori_exit
-    popf
+    jmp execute_xori_exit
 
+    .continue4:
+    cmp dil, 4
+    jne .continue5    
     mov r8, rdx
     add r8, r12 ; data + x
     xor [r8], sil ; [x] czyli [data+x]
     pushf
-    cmp dil, 4
-    je execute_xori_exit
-    popf
+    jmp execute_xori_exit
 
+    .continue5:
+    cmp dil, 5
+    jne .continue6    
     mov r8, rsi
     add r8, r13 ; data + y
     xor [r8], sil ; [y] czyli [data+y]
     pushf
-    cmp dil, 5
-    je execute_xori_exit
-    popf
+    jmp execute_xori_exit
 
+    .continue6: 
+    cmp dil, 6
+    jne .continue7   
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     xor [r8], sil ; [x+d] czyli [data+x+d]
     pushf
-    cmp dil, 6
-    je execute_xori_exit
-    popf
+    jmp execute_xori_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_xori_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     xor [r8], sil ; [y+d] czyli [data+y+d]
     pushf
-    cmp dil, 7
-    je execute_xori_exit
-    popf
 
     execute_xori_exit:
         mov r15b, 0
@@ -816,63 +849,69 @@ execute_addi:
     ; a w sil imm8
     ; w rdx mamy data
 
+    cmp dil, 0
+    jne .continue1    
     add r10b, sil
     pushf
-    cmp dil, 0
-    je execute_xori_exit
-    popf
+    jmp execute_addi_exit
 
+    .continue1:  
+    cmp dil, 1
+    jne .continue2  
     add r11b, sil
     pushf
-    cmp dil, 1
-    je execute_addi_exit
-    popf
+    jmp execute_addi_exit
 
+    .continue2:  
+    cmp dil, 2
+    jne .continue3  
     add r12b, sil
     pushf
-    cmp dil, 2
-    je execute_addi_exit
-    popf
+    jmp execute_addi_exit
 
+    .continue3:  
+    cmp dil, 3
+    jne .continue4  
     add r13b, sil
     pushf
-    cmp dil, 3
-    je execute_addi_exit
-    popf
+    jmp execute_addi_exit
 
+    .continue4:
+    cmp dil, 4
+    jne .continue5    
     mov r8, rdx
     add r8, r12 ; data + x
     add [r8], sil ; [x] czyli [data+x]
     pushf
-    cmp dil, 4
-    je execute_addi_exit
-    popf
+    jmp execute_addi_exit
 
+    .continue5:
+    cmp dil, 5
+    jne .continue6    
     mov r8, rsi
     add r8, r13 ; data + y
     add [r8], sil ; [y] czyli [data+y]
     pushf
-    cmp dil, 5
-    je execute_addi_exit
-    popf
+    jmp execute_addi_exit
 
+    .continue6: 
+    cmp dil, 6
+    jne .continue7   
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     add [r8], sil ; [x+d] czyli [data+x+d]
     pushf
-    cmp dil, 6
-    je execute_addi_exit
-    popf
+    jmp execute_addi_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_addi_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     add [r8], sil ; [y+d] czyli [data+y+d]
     pushf
-    cmp dil, 7
-    je execute_addi_exit
-    popf
 
     execute_addi_exit:
         mov r15b, 0
@@ -888,80 +927,77 @@ execute_cmpi:
     ; a w sil imm8
     ; w rdx mamy data
 
+    cmp dil, 0
+    jne .continue1    
     cmp r10b, sil
     pushf
     pushf
-    cmp dil, 0
-    je execute_cmpi_exit
-    popf
-    popf
+    jmp execute_cmpi_exit
 
+    .continue1:  
+    cmp dil, 1
+    jne .continue2  
     cmp r11b, sil
     pushf
     pushf
-    cmp dil, 1
-    je execute_cmpi_exit
-    popf
-    popf
+    jmp execute_cmpi_exit
 
-    cmp r12b, al
-    pushf
-    pushf
+    .continue2:  
     cmp dil, 2
-    je execute_cmpi_exit
-    popf
-    popf
+    jne .continue3  
+    cmp r12b, sil
+    pushf
+    pushf
+    jmp execute_cmpi_exit
 
+    .continue3:  
+    cmp dil, 3
+    jne .continue4  
     cmp r13b, sil
     pushf
     pushf
-    cmp dil, 3
-    je execute_cmpi_exit
-    popf
-    popf
+    jmp execute_cmpi_exit
 
+    .continue4:
+    cmp dil, 4
+    jne .continue5    
     mov r8, rdx
     add r8, r12 ; data + x
     cmp [r8], sil ; [x] czyli [data+x]
     pushf
     pushf
-    cmp dil, 4
-    je execute_cmpi_exit
-    ; jmp execute_cmpi_exit ; tylko do debugu ta linijka
-    popf
-    popf
+    jmp execute_cmpi_exit
 
+    .continue5:
+    cmp dil, 5
+    jne .continue6    
     mov r8, rsi
     add r8, r13 ; data + y
     cmp [r8], sil ; [y] czyli [data+y]
     pushf
     pushf
-    cmp dil, 5
-    je execute_cmpi_exit
-    popf
-    popf
+    jmp execute_cmpi_exit
 
+    .continue6: 
+    cmp dil, 6
+    jne .continue7   
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     cmp [r8], sil ; [x+d] czyli [data+x+d]
     pushf
     pushf
-    cmp dil, 6
-    je execute_cmpi_exit
-    popf
-    popf
+    jmp execute_cmpi_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_addi_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     cmp [r8], sil ; [y+d] czyli [data+y+d]
     pushf
     pushf
-    cmp dil, 7
-    je execute_cmpi_exit
-    popf
-    popf
 
     execute_cmpi_exit:
         mov ax, 0
@@ -1290,6 +1326,7 @@ execute_command:
     pop rdx
     pop rsi
     pop rdi
+    ; mov r15b, 17 ; tylko do debugu!!
     jmp execute_command_exit
 
     .continue11:
@@ -1305,6 +1342,8 @@ execute_command:
     mov rdx, rsi ; data
     mov sil, bl ; imm8
     mov cl, bh 
+    ; mov r15b, 52 ; tylko do debugu!!
+    ; add r15b, cl ; tylko do debugu!!
     mov dil, cl ; arg1
     ; mov dil, bh ; arg1
     call execute_movi
@@ -1442,10 +1481,14 @@ so_emul:
         push rcx
         push rbx
         mov r8, rdi
+        shl r14, 1 ; mnożymy PC razy 16 na chwilę żeby przesunąć o dwa bajty
         add r8, r14 ; dodajemy PC
+        shr r14, 1 
         mov bx, [r8] ; instrukcja, którą mamy wykonać
         cmp bx, 0xffff ; czy to brk?
         je main_exit ; jeśli to brk to przerywamy
+        ; cmp r9b, 2 ; tylko do debugu te linijki 
+        ; je .debug1 ; tylko do debugu ta linijka!!
         call execute_command ; jeśli nie brk to exectujemy ; zakomentowane tylko do debugu!!
         pop rbx
         pop rcx
@@ -1454,8 +1497,18 @@ so_emul:
         pop rdi
         inc r14b ; pc++
         cmp rbx, rdx ; counter pętli, steps
+        mov r9b, 2 ; tylko do debugu ta linijka!!
         jne main_loop
 
+    ; mov r10b, 6
+    jmp main_exit ; tylko do debugu ta sekcja!!   
+    .debug1:
+    mov r15w, bx ; tylko do debugu ta sekcja!!
+    pop rbx
+    pop rcx
+    pop rdx
+    pop rsi
+    pop rdi
 
     main_exit:
         ; push_state_to_rax nie potrzebuje argumentów
