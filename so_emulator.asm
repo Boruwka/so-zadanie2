@@ -1427,7 +1427,7 @@ execute_command:
     jmp execute_command_exit
 
     .continue17:    
-    cmp r8b, 6 
+    cmp r8b, 7 
     jne .continue18
     ; to sbb
     call execute_sbb
@@ -1494,8 +1494,6 @@ so_emul:
         mov bx, [r8] ; instrukcja, którą mamy wykonać
         cmp bx, 0xffff ; czy to brk?
         je brk_exit ; jeśli to brk to przerywamy
-        ; cmp r9b, 2 ; tylko do debugu te linijki 
-        ; je .debug1 ; tylko do debugu ta linijka!!
         call execute_command ; jeśli nie brk to exectujemy
         pop rbx
         pop rcx
