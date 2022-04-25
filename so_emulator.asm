@@ -4,14 +4,13 @@ cpu_state: resb 8
 
 section .text
 
-global push_state_to_rax:
 push_state_to_rax:
+    ; kopiuje stan procesora z rejestrów do rax
     ; przy okazji zapisuje też stan w zmiennej cpu_state
     mov rax, 0
     add al, r15b ; wartość Z
     shl rax, 8 
     ; w r15b jest Z a w r15w\r15b jest C
-    ; ustalmy to raz na zawsze
     mov r15b, 0
     shr r15w, 8 ; teraz w r15b jest C
     add al, r15b ; wartość C
@@ -24,17 +23,10 @@ push_state_to_rax:
     shl rax, 8
     add al, r11b ; wartość D
     shl rax, 8 ;
-    add al, r10b ;
-    ; teraz obrócimy rax w drugą stronę, nwm po co, ale to działa
-    ; push rdi
-    ; mov rdi, rax
-    ; call turn_register 
-    ; pop rdi
-    ; obrócone
+    add al, r10b ; wartość A
     mov [rel cpu_state], rax ; przenosimy żeby mieć na następne wywołania
     ret
 
-global push_state_to_registers:
 push_state_to_registers:
 ; na początku wywołania so_emul()
 ; bierze zamrożone cpu_state i kopiuje je do rejestrów
@@ -62,7 +54,6 @@ mov r15b, [rel cpu_state] ; wartość C
 ret
 
 
-global get_value_from_register_code:
 get_value_from_register_code:
     ; otrzymujemy register code w dil (odpowiedniku rdi)
     ; w rsi mamy data
@@ -128,12 +119,10 @@ get_value_from_register_code:
     get_value_from_register_code_exit:
         ret 
 
-global execute_mov:
 execute_mov:
     ; dostajemy jako argumenty kody rejestrów
     ; w dil i sil
     ; w rdx mamy data
-    ; mov r15b, 17 ; tylko do debugu!!
     push rdi
     push rsi
     push rdx
@@ -144,16 +133,6 @@ execute_mov:
     pop rsi
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
-
-    ;tylko do debugu ta sekcja!!
-    ;mov r15b, 15
-    ;cmp al, 3
-    ;je .debug1
-    ;jmp .debug2
-    ;.debug1:
-    ;mov r15b, 16
-    ;.debug2:
-    
 
     cmp dil, 0
     jne .continue1
@@ -215,7 +194,6 @@ execute_mov:
     execute_mov_exit:
         ret
 
-global execute_or:
 execute_or:
     ; dostajemy jako argumenty kody rejestrów
     ; w dil i sil
@@ -321,15 +299,6 @@ execute_add:
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
-    ;tylko do debugu ta sekcja!!
-    ;mov r14b, 15
-    ;cmp al, 1
-    ;je .debug1
-    ;jmp .debug2
-    ;.debug1:
-    ;mov r14b, 16
-    ;.debug2:
-
     cmp dil, 0
     jne .continue1
     add r10b, al
@@ -403,7 +372,7 @@ execute_add:
         .no_zero:
         ret
 
-global execute_sub:
+
 execute_sub:
     ; dostajemy jako argumenty kody rejestrów
     ; w dil i sil
@@ -492,7 +461,6 @@ execute_sub:
         .no_zero:
         ret
 
-global execute_adc:
 execute_adc:
     ; dostajemy jako argumenty kody rejestrów
     ; w dil i sil
@@ -594,7 +562,7 @@ execute_adc:
         mov r15w, ax ; aktualizacja flag
         ret
 
-global execute_sbb:
+
 execute_sbb:
     ; dostajemy jako argumenty kody rejestrów
     ; w dil i sil
@@ -696,7 +664,7 @@ execute_sbb:
         mov r15w, ax ; aktualizacja flag
         ret
 
-global execute_movi:
+
 execute_movi:
     ; dostajemy jako argumenty w dil kod rejestru
     ; a w sil imm8
@@ -714,7 +682,6 @@ execute_movi:
     cmp dil, 1
     jne .continue2  
     mov r11b, sil
-    ; mov r15b, 22 ; tylko do debugu ta linijka!!
     jmp execute_movi_exit
 
     .continue2:  
@@ -844,7 +811,6 @@ execute_xori:
         ret
 
 
-global execute_addi:
 execute_addi:
     ; dostajemy jako argumenty w dil kod rejestru
     ; a w sil imm8
@@ -920,10 +886,8 @@ execute_addi:
         jnz .no_zero ; Z się nie ustawiło w add
         mov r15b, 1
         .no_zero:
-        ;mov r15b, 5; tylko do debugu!!
         ret
 
-global execute_cmpi:
 execute_cmpi:
     ; dostajemy jako argumenty w dil kod rejestru
     ; a w sil imm8
@@ -1014,11 +978,10 @@ execute_cmpi:
         mov r15w, ax ; aktualizacja flag
         ret
 
-global execute_rcr:
-    execute_rcr:
+
+execute_rcr:
     ; w dil mamy kod rejestru
     ; w rsi mamy data
-    ; mov r15b, r14b ; tylko do debugu ta linijka!!
     push rdx
     push rsi
     push rdi ; na wszelki wypadek, bo kto tam wie co ta funkcja zrobi
@@ -1107,14 +1070,13 @@ global execute_rcr:
     execute_rcr_exit:
         ret
 
-global execute_clc:
+
 execute_clc:
     mov cx, r15w
     mov ch, 0
     mov r15w, cx
     ret
 
-global execute_stc:
 execute_stc:
     mov cx, r15w
     mov ch, 1
@@ -1122,14 +1084,12 @@ execute_stc:
     ret
 
 
-
-global execute_jmp:
 execute_jmp:
     ; po prostu zwiększa pc o argument z dil
     add r14b, bl
     ret
 
-global execute_jz:
+
 execute_jz:
     cmp r15b, 1
     jne execute_jz_exit
@@ -1137,7 +1097,7 @@ execute_jz:
     execute_jz_exit:
         ret
 
-global execute_jnz:
+
 execute_jnz:
     cmp r15b, 0
     jne execute_jnz_exit
@@ -1145,7 +1105,6 @@ execute_jnz:
     execute_jnz_exit:
         ret
 
-global execute_jc:
 execute_jc:
     push rcx
     mov cx, r15w
@@ -1157,7 +1116,6 @@ execute_jc:
         pop rcx
         ret
 
-global execute_jnc:
 execute_jnc:
     push rcx
     mov cx, r15w
@@ -1170,7 +1128,6 @@ execute_jnc:
         ret
 
 
-global execute_command:
 execute_command:
     ; argumenty:
     ; rdi - code (wskaźnik)
@@ -1196,7 +1153,6 @@ execute_command:
     cmp bh, 0xc2
     jne .continue2
     ; jeśli tu jesteśmy to mamy jnc
-    ; mov r15b, 21 ; tylko do debugu ta linijka!!
     call execute_jnc ; dostaje w bl swój argument
     jmp execute_command_exit
 
@@ -1325,7 +1281,6 @@ execute_command:
     pop rdx
     pop rsi
     pop rdi
-    ; mov r15b, 17 ; tylko do debugu!!
     jmp execute_command_exit
 
     .continue11:
@@ -1341,10 +1296,7 @@ execute_command:
     mov rdx, rsi ; data
     mov sil, bl ; imm8
     mov cl, bh 
-    ; mov r15b, 52 ; tylko do debugu!!
-    ; add r15b, cl ; tylko do debugu!!
     mov dil, cl ; arg1
-    ; mov dil, bh ; arg1
     call execute_movi
     pop rcx
     pop rdx
@@ -1356,7 +1308,6 @@ execute_command:
     mov r8b, bl 
     shl r8b, 4
     shr r8b, 4 ; teraz w r8b mamy końcówkę mówiącą jaka to instrukcja
-    ; mov r15b, r8b ; tylko do debugu!!
     push rdx
     push rsi
     push rdi
@@ -1378,7 +1329,6 @@ execute_command:
     cmp r8b, 0 
     jne .continue13
     ; to mov
-    ; mov r15b, 0 ; tylko do debugu
     call execute_mov
     pop rdi
     pop rsi
@@ -1399,7 +1349,6 @@ execute_command:
     cmp r8b, 4 
     jne .continue15
     ; to add
-    ; mov r14b, 0x22 ; tylko do debugu ta linijka
     call execute_add
     pop rdi
     pop rsi
@@ -1522,5 +1471,3 @@ so_emul:
         pop r12
         pop rbx
         ret
-
-
