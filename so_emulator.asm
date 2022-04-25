@@ -4,25 +4,6 @@ cpu_state: resb 8
 
 section .text
 
-turn_register:
-    ; dostaje rdi i w rax ma zwrócić odwrócony (w kolejności bitowej)
-    push rbx
-    mov rbx, 0
-    mov rax, 0
-    .loop:
-        mov rcx, rdi
-        shl rcx, 63
-        shr rcx, 63
-        ; teraz w rcx jest rdi mod 2
-        add rax, rcx
-        shl rax, 1
-        shr rdi, 1
-        inc rbx
-        cmp rbx, 64
-        jne .loop
-    pop rbx
-    ret
-
 global push_state_to_rax:
 push_state_to_rax:
     ; przy okazji zapisuje też stan w zmiennej cpu_state
@@ -65,18 +46,18 @@ mov r13, 0
 mov r14, 0
 mov r15, 0
 mov r10b, [rel cpu_state] ; wartość A
-shr dword[rel cpu_state], 8
+shr qword[rel cpu_state], 8
 mov r11b, [rel cpu_state] ; wartość D
-shr dword[rel cpu_state], 8
+shr qword[rel cpu_state], 8
 mov r12b, [rel cpu_state] ; wartość X
-shr dword[rel cpu_state], 8
+shr qword[rel cpu_state], 8
 mov r13b, [rel cpu_state], ; wartość Y
-shr dword[rel cpu_state], 8
-mov r14b, [rel cpu_state], ; wartość PC
-shr dword[rel cpu_state], 16 ; bo jeszcze unused
+shr qword[rel cpu_state], 8
+mov r14b, [rel cpu_state] ; wartość PC
+shr qword[rel cpu_state], 16 ; bo jeszcze unused
 mov r15b, [rel cpu_state] ; wartość Z
 shl r15w, 8
-shr dword[rel cpu_state], 8
+shr qword[rel cpu_state], 8
 mov r15b, [rel cpu_state] ; wartość C
 ret
 
@@ -152,6 +133,7 @@ execute_mov:
     ; dostajemy jako argumenty kody rejestrów
     ; w dil i sil
     ; w rdx mamy data
+    ; mov r15b, 17 ; tylko do debugu!!
     push rdi
     push rsi
     push rdx
@@ -162,6 +144,16 @@ execute_mov:
     pop rsi
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
+
+    ; tylko do debugu ta sekcja!!
+    ;mov r15b, dil
+    ;cmp dil, 4
+    ;je .debug1
+    ;jmp .debug2
+    ;.debug1:
+    ;mov r15b, 16
+    ;.debug2:
+    
 
     cmp dil, 0
     jne .continue1
@@ -1102,29 +1094,7 @@ execute_stc:
     mov r15w, cx
     ret
 
-global testowa:
-testowa: 
-    ; przestrzega abi
-    ; wywołuje inne funkcje
-    ; w rdi dostaje data
-    ; w rax zwraca co chcemy
-    push r12
-    push r13
-    push r14
-    push r15
-    call push_state_to_registers
-    mov rdx, rdi ; data
-    mov rsi, rdi ; data
-    mov dil, 0
-    mov r10b, 3
-    ; call execute_rcr
-    call execute_stc
-    call push_state_to_rax
-    pop r15
-    pop r14
-    pop r13
-    pop r12
-    ret
+
 
 global execute_jmp:
 execute_jmp:
@@ -1365,7 +1335,8 @@ execute_command:
     ; spośród mov, or, add, sub, adc, sbb
     ; tu musimy wyłuskać argumenty dla nich
     ; i wstawić je w odpowiednie miejsca, bo dla wszystkich są takie same
-    shl bx, 8 ; teraz w bh jest arg2 a w bl arg1
+    shr bx, 3 ; 
+    shr bl, 5 ; teraz w bl jest arg1 a w bh arg2
     mov dil, bl
     push rcx
     mov cl, bh
@@ -1486,10 +1457,10 @@ so_emul:
         shr r14, 1 
         mov bx, [r8] ; instrukcja, którą mamy wykonać
         cmp bx, 0xffff ; czy to brk?
-        je main_exit ; jeśli to brk to przerywamy
+        je brk_exit ; jeśli to brk to przerywamy
         ; cmp r9b, 2 ; tylko do debugu te linijki 
         ; je .debug1 ; tylko do debugu ta linijka!!
-        call execute_command ; jeśli nie brk to exectujemy ; zakomentowane tylko do debugu!!
+        call execute_command ; jeśli nie brk to exectujemy
         pop rbx
         pop rcx
         pop rdx
@@ -1500,15 +1471,13 @@ so_emul:
         mov r9b, 2 ; tylko do debugu ta linijka!!
         jne main_loop
 
-    ; mov r10b, 6
-    jmp main_exit ; tylko do debugu ta sekcja!!   
-    .debug1:
-    mov r15w, bx ; tylko do debugu ta sekcja!!
-    pop rbx
-    pop rcx
-    pop rdx
-    pop rsi
-    pop rdi
+    jmp main_exit
+    brk_exit:
+        pop rbx
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
 
     main_exit:
         ; push_state_to_rax nie potrzebuje argumentów
@@ -1519,3 +1488,5 @@ so_emul:
         pop r12
         pop rbx
         ret
+
+
