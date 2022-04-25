@@ -163,48 +163,62 @@ execute_mov:
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
-    mov r10b, al
     cmp dil, 0
-    je execute_mov_exit
-    ; jmp execute_mov_exit ; tylko do debugu ta linijka
+    jne .continue1
+    mov r10b, al
+    jmp execute_mov_exit
 
+    .continue1:
+    cmp dil, 1 
+    jne .continue2
     mov r11b, al
-    cmp dil, 1
-    je execute_mov_exit
+    jmp execute_mov_exit
 
-    mov r12b, al
+    .continue2:
     cmp dil, 2
-    je execute_mov_exit
+    jne .continue3
+    mov r12b, al
+    jmp execute_mov_exit
 
-    mov r13b, al
+    .continue3: 
     cmp dil, 3
-    je execute_mov_exit
+    jne .continue4   
+    mov r13b, al
+    jmp execute_mov_exit
 
+    .continue4:    
+    cmp dil, 4
+    jne .continue5
     mov r8, rdx
     add r8, r12 ; data + x
     mov [r8], al ; [x] czyli [data+x]
-    cmp dil, 4
-    je execute_mov_exit
+    jmp execute_mov_exit
 
+    .continue5:  
+    cmp dil, 5
+    jne .continue6  
     mov r8, rsi
     add r8, r13 ; data + y
     mov [r8], al ; [y] czyli [data+y]
-    cmp dil, 5
-    je execute_mov_exit
+    jmp execute_mov_exit
 
+    .continue6:   
+    cmp dil, 6 
+    jne .continue7
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     mov [r8], al ; [x+d] czyli [data+x+d]
-    cmp dil, 6
-    je execute_mov_exit
+    jmp execute_mov_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_mov_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     mov [r8], al ; [y+d] czyli [data+y+d]
-    cmp dil, 7
-    je execute_mov_exit
+    jmp execute_mov_exit
 
     execute_mov_exit:
         ret
@@ -225,62 +239,70 @@ execute_or:
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
+    cmp dil, 0
+    jne .continue1
     or r10b, al
     pushf
-    cmp dil, 0
-    je execute_or_exit
-    popf
+    jmp execute_or_exit
 
+    .continue1:
+    cmp dil, 1 
+    jne .continue2
     or r11b, al
     pushf
-    cmp dil, 1
-    je execute_or_exit
-    popf
+    jmp execute_or_exit
 
+    .continue2:
+    cmp dil, 2
+    jne .continue3
     or r12b, al
     pushf
-    cmp dil, 2
-    je execute_or_exit
+    jmp execute_or_exit
 
+    .continue3: 
+    cmp dil, 3
+    jne .continue4   
     or r13b, al
     pushf
-    cmp dil, 3
-    je execute_or_exit
-    popf
+    jmp execute_or_exit
 
+    .continue4:    
+    cmp dil, 4
+    jne .continue5
     mov r8, rdx
     add r8, r12 ; data + x
     or [r8], al ; [x] czyli [data+x]
     pushf
-    cmp dil, 4
-    je execute_or_exit
-    popf
+    jmp execute_or_exit
 
+    .continue5:  
+    cmp dil, 5
+    jne .continue6  
     mov r8, rsi
     add r8, r13 ; data + y
     or [r8], al ; [y] czyli [data+y]
     pushf
-    cmp dil, 5
-    je execute_or_exit
-    popf
+    jmp execute_or_exit
 
+    .continue6:   
+    cmp dil, 6 
+    jne .continue7
     mov r8, rdx
     add r8, r12 ; data + x
     add r8, r11 ; + d
     or [r8], al ; [x+d] czyli [data+x+d]
     pushf
-    cmp dil, 6
-    je execute_or_exit
-    popf
+    jmp execute_or_exit
 
+    .continue7:  
+    cmp dil, 7
+    jne execute_or_exit  
     mov r8, rdx
     add r8, r13 ; data + y
     add r8, r11 ; + d
     or [r8], al ; [y+d] czyli [data+y+d]
     pushf
-    cmp dil, 7
-    je execute_or_exit
-    popf
+    jmp execute_or_exit
 
     execute_or_exit:
         ; mov al, r15b ; to do ustawiania C będzie
@@ -667,6 +689,8 @@ execute_movi:
     ; a w sil imm8
     ; w rdx mamy data
     ; teraz musimy do rejestru o kodzie dil dać wartość w sil
+
+    ; mov r15b, dil ; tylko do debugu ta linijka!!
 
     mov r10b, sil
     cmp dil, 0
@@ -1273,7 +1297,7 @@ execute_command:
     jl .continue12
     ; to jest movi
     ; teraz musimy wyłuskać argumenty
-    sub bx, 0x5800
+    sub bx, 0x4000
     push rdi
     push rsi
     push rdx
@@ -1422,21 +1446,23 @@ so_emul:
         mov bx, [r8] ; instrukcja, którą mamy wykonać
         cmp bx, 0xffff ; czy to brk?
         je main_exit ; jeśli to brk to przerywamy
-        call execute_command ; jeśli nie brk to exectujemy
+        call execute_command ; jeśli nie brk to exectujemy ; zakomentowane tylko do debugu!!
         pop rbx
         pop rcx
         pop rdx
         pop rsi
         pop rdi
         inc r14b ; pc++
+        cmp rbx, rdx ; counter pętli, steps
         jne main_loop
+
 
     main_exit:
         ; push_state_to_rax nie potrzebuje argumentów
         call push_state_to_rax
-        pop rbx
         pop r15
         pop r14
         pop r13
         pop r12
+        pop rbx
         ret
