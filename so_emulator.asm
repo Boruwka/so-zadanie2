@@ -145,9 +145,9 @@ execute_mov:
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
-    ; tylko do debugu ta sekcja!!
-    ;mov r15b, dil
-    ;cmp dil, 4
+    ;tylko do debugu ta sekcja!!
+    ;mov r15b, 15
+    ;cmp al, 3
     ;je .debug1
     ;jmp .debug2
     ;.debug1:
@@ -189,7 +189,7 @@ execute_mov:
     .continue5:  
     cmp dil, 5
     jne .continue6  
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     mov [r8], al ; [y] czyli [data+y]
     jmp execute_mov_exit
@@ -270,7 +270,7 @@ execute_or:
     .continue5:  
     cmp dil, 5
     jne .continue6  
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     or [r8], al ; [y] czyli [data+y]
     pushf
@@ -321,6 +321,15 @@ execute_add:
     pop rdi
     ; teraz musimy do rejestru o kodzie dil dać wartość w al
 
+    ;tylko do debugu ta sekcja!!
+    ;mov r14b, 15
+    ;cmp al, 1
+    ;je .debug1
+    ;jmp .debug2
+    ;.debug1:
+    ;mov r14b, 16
+    ;.debug2:
+
     cmp dil, 0
     jne .continue1
     add r10b, al
@@ -360,7 +369,7 @@ execute_add:
     .continue5:  
     cmp dil, 5
     jne .continue6  
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     add [r8], al ; [y] czyli [data+y]
     pushf
@@ -449,7 +458,7 @@ execute_sub:
     .continue5:  
     cmp dil, 5
     jne .continue6  
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     sub [r8], al ; [y] czyli [data+y]
     pushf
@@ -543,7 +552,7 @@ execute_adc:
     .continue5:  
     cmp dil, 5
     jne .continue6  
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     add [r8], al ; [y] czyli [data+y]
     pushf
@@ -645,7 +654,7 @@ execute_sbb:
     .continue5:  
     cmp dil, 5
     jne .continue6  
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     sub [r8], al ; [y] czyli [data+y]
     pushf
@@ -731,7 +740,7 @@ execute_movi:
     .continue5:
     cmp dil, 5
     jne .continue6    
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     mov [r8], sil ; [y] czyli [data+y]
     jmp execute_movi_exit
@@ -801,7 +810,7 @@ execute_xori:
     .continue5:
     cmp dil, 5
     jne .continue6    
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     xor [r8], sil ; [y] czyli [data+y]
     pushf
@@ -880,7 +889,7 @@ execute_addi:
     .continue5:
     cmp dil, 5
     jne .continue6    
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     add [r8], sil ; [y] czyli [data+y]
     pushf
@@ -963,7 +972,7 @@ execute_cmpi:
     .continue5:
     cmp dil, 5
     jne .continue6    
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     cmp [r8], sil ; [y] czyli [data+y]
     pushf
@@ -1057,7 +1066,7 @@ global execute_rcr:
     cmp dil, 4
     je execute_rcr_exit
 
-    mov r8, rsi
+    mov r8, rdx
     add r8, r13 ; data + y
     mov [r8], al ; [y] czyli [data+y]
     cmp dil, 5
@@ -1152,6 +1161,13 @@ execute_command:
     ; rcx - core
     ; bx - instrukcja, którą mamy wykonać
     push rbx
+
+    ; mov r14b, 0x21 ; tylko do debugu ta linijka!!
+    ; tylko do debugu ta sekcja
+    ;cmp bx, 0x0104 
+    ;jne .debug1
+    ;mov r15b, 7
+    ;.debug1:
 
     ; najpierw sprawdzimy skoki
     ; a potem dla pozostałych wyłuskamy argumenty i wywołamy odpowiednią funkcję
@@ -1325,8 +1341,9 @@ execute_command:
 
     .continue12:
     mov r8b, bl 
-    shl r8b, 8
-    shr r8b, 8 ; teraz w r8b mamy końcówkę mówiącą jaka to instrukcja
+    shl r8b, 4
+    shr r8b, 4 ; teraz w r8b mamy końcówkę mówiącą jaka to instrukcja
+    ; mov r15b, r8b ; tylko do debugu!!
     push rdx
     push rsi
     push rdi
@@ -1343,9 +1360,12 @@ execute_command:
     mov sil, cl
     pop rcx
 
+    
+
     cmp r8b, 0 
     jne .continue13
     ; to mov
+    ; mov r15b, 0 ; tylko do debugu
     call execute_mov
     pop rdi
     pop rsi
@@ -1366,6 +1386,7 @@ execute_command:
     cmp r8b, 4 
     jne .continue15
     ; to add
+    ; mov r14b, 0x22 ; tylko do debugu ta linijka
     call execute_add
     pop rdi
     pop rsi
