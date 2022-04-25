@@ -917,9 +917,10 @@ execute_addi:
     execute_addi_exit:
         mov r15b, 0
         popf 
-        jnz .no_zero ; Z się nie ustawiło w xor
+        jnz .no_zero ; Z się nie ustawiło w add
         mov r15b, 1
         .no_zero:
+        ;mov r15b, 5; tylko do debugu!!
         ret
 
 global execute_cmpi:
@@ -1016,11 +1017,14 @@ execute_cmpi:
 global execute_rcr:
     execute_rcr:
     ; w dil mamy kod rejestru
-    ; w rdx mamy data
+    ; w rsi mamy data
+    ; mov r15b, r14b ; tylko do debugu ta linijka!!
     push rdx
+    push rsi
     push rdi ; na wszelki wypadek, bo kto tam wie co ta funkcja zrobi
     call get_value_from_register_code
     pop rdi
+    pop rsi
     pop rdx
     ; w al mamy teraz wartość, którą mamy obrócić i przekopiować do rejestru o kodzie dil z powrotem
     push rbx
@@ -1044,47 +1048,61 @@ global execute_rcr:
     ; a w al obrócona liczba
     ; musimy dodać tę liczbę w al do rejestru o kodzie dil
 
-    mov r10b, al
     cmp dil, 0
-    je execute_rcr_exit
+    jne .continue1
+    mov r10b, al
+    jmp execute_rcr_exit
 
-    mov r11b, al
+    .continue1:
     cmp dil, 1
-    je execute_rcr_exit
+    jne .continue2    
+    mov r11b, al
+    jmp execute_rcr_exit
 
-    mov r12b, al
+    .continue2: 
     cmp dil, 2
-    je execute_rcr_exit
+    jne .continue3   
+    mov r12b, al
+    jmp execute_rcr_exit
 
-    mov r13b, al
+    .continue3: 
     cmp dil, 3
-    je execute_rcr_exit
+    jne .continue4   
+    mov r13b, al
+    jmp execute_rcr_exit
 
-    mov r8, rdx
+    .continue4:    
+    cmp dil, 4
+    jne .continue5
+    mov r8, rsi
     add r8, r12 ; data + x
     mov [r8], al ; [x] czyli [data+x]
-    cmp dil, 4
-    je execute_rcr_exit
+    jmp execute_rcr_exit
 
-    mov r8, rdx
+    .continue5:
+    cmp dil, 5
+    jne .continue6    
+    mov r8, rsi
     add r8, r13 ; data + y
     mov [r8], al ; [y] czyli [data+y]
-    cmp dil, 5
-    je execute_rcr_exit
+    jmp execute_rcr_exit
 
-    mov r8, rdx
+    .continue6:
+    cmp dil, 6
+    jne .continue7    
+    mov r8, rsi
     add r8, r12 ; data + x
     add r8, r11 ; + d
     mov [r8], al ; [x+d] czyli [data+x+d]
-    cmp dil, 6
-    je execute_rcr_exit
+    jmp execute_rcr_exit
 
-    mov r8, rdx
+    .continue7:
+    cmp dil, 7
+    jne execute_rcr_exit   
+    mov r8, rsi
     add r8, r13 ; data + y
     add r8, r11 ; + d
     mov [r8], al ; [y+d] czyli [data+y+d]
-    cmp dil, 7
-    je execute_rcr_exit
 
     execute_rcr_exit:
         ret
@@ -1108,7 +1126,7 @@ execute_stc:
 global execute_jmp:
 execute_jmp:
     ; po prostu zwiększa pc o argument z dil
-    add r14b, dil
+    add r14b, bl
     ret
 
 global execute_jz:
@@ -1130,7 +1148,7 @@ execute_jnz:
 global execute_jc:
 execute_jc:
     push rcx
-    mov r15w, cx
+    mov cx, r15w
     shr cx, 8
     cmp cl, 1
     jne execute_jc_exit
@@ -1142,7 +1160,7 @@ execute_jc:
 global execute_jnc:
 execute_jnc:
     push rcx
-    mov r15w, cx
+    mov cx, r15w
     shr cx, 8
     cmp cl, 0
     jne execute_jnc_exit
@@ -1162,17 +1180,11 @@ execute_command:
     ; bx - instrukcja, którą mamy wykonać
     push rbx
 
-    ; mov r14b, 0x21 ; tylko do debugu ta linijka!!
-    ; tylko do debugu ta sekcja
-    ;cmp bx, 0x0104 
-    ;jne .debug1
-    ;mov r15b, 7
-    ;.debug1:
-
     ; najpierw sprawdzimy skoki
     ; a potem dla pozostałych wyłuskamy argumenty i wywołamy odpowiednią funkcję
+    ; mov dil, bl ; żeby było dla skoków jako argument
 
-    cmp bx, 0xc0 ; jmp
+    cmp bh, 0xc0 ; jmp
     jne .continue1
     ; jeśli tu jesteśmy to mamy jmp
     call execute_jmp ; dostaje w bl swój argument
@@ -1181,28 +1193,29 @@ execute_command:
     .continue1:
     ; teraz będziemy sprawdzać pozostałe skoki
 
-    cmp bx, 0xc2
+    cmp bh, 0xc2
     jne .continue2
     ; jeśli tu jesteśmy to mamy jnc
+    ; mov r15b, 21 ; tylko do debugu ta linijka!!
     call execute_jnc ; dostaje w bl swój argument
     jmp execute_command_exit
 
     .continue2:
-    cmp bx, 0xc3
+    cmp bh, 0xc3
     jne .continue3
     ; jeśli tu jesteśmy to mamy jc
     call execute_jc ; dostaje w bl swój argument
     jmp execute_command_exit
 
     .continue3:
-    cmp bx, 0xc4
+    cmp bh, 0xc4
     jne .continue4
     ; jeśli tu jesteśmy to mamy jnz
     call execute_jnz ; dostaje w bl swój argument
     jmp execute_command_exit
 
     .continue4:
-    cmp bx, 0xc5
+    cmp bh, 0xc5
     jne .continue5
     ; jeśli tu jesteśmy to mamy jz
     call execute_jz ; dostaje w bl swój argument
@@ -1229,7 +1242,7 @@ execute_command:
 
 
     cmp bx, 0x7001
-    jl .continue10
+    jl .continue8
     ; to jest rcr
     ; teraz musimy wyłuskać argumenty
     sub bx, 0x7001
@@ -1462,6 +1475,8 @@ so_emul:
     pop rdi
 
     mov rbx, 0 ; rbx - counter głównej pętli programu
+    cmp rdx, 0 ; czy steps = 0? 
+    je main_exit ; jeśli steps = 0 to od razu idziemy do exit
     
     main_loop:
         inc rbx
